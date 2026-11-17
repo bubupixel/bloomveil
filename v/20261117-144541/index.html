@@ -17,7 +17,7 @@ body{touch-action:manipulation;overscroll-behavior:none}
   padding:9px 18px;font:15px "LXGW WenKai TC","Kaiti TC",serif;letter-spacing:.12em;color:#fbf2df;cursor:pointer;
   background:rgba(22,15,11,.92);border:1px solid #ecd7a2;border-radius:999px;box-shadow:0 6px 20px rgba(0,0,0,.45);white-space:nowrap}
 </style>
-<script>window.GAME_VERSION = '20261117-093736';</script>
+<script>window.GAME_VERSION = '20261117-144541';</script>
 <title>花朝靈院</title>
 <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png">
@@ -588,36 +588,71 @@ html.lowfx .item.in{animation:itemIn 1.2s ease-out forwards}
 </div>
 <script>
 // 日文版仍在製作：網址加上 &ja 才會開啟語言切換
-window.JA_ON = /[#&]ja\b/.test(location.hash);
+window.JA_ON = true;
 window.LANG = (() => { try { return JA_ON && JSON.parse(localStorage.getItem('huachao-pref') || '{}').lang === 'ja' ? 'ja' : 'zh'; } catch (e) { return 'zh'; } })();
-if (LANG === 'ja'){ document.documentElement.lang = 'ja'; document.write('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap"><script src="story_ja.js?v=20261117-093736"><\/script>'); }
+if (LANG === 'ja'){ document.documentElement.lang = 'ja'; document.write('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap"><script src="story_ja.js?v=20261117-144541"><\/script>'); }
 </script>
-<script src="audio.js?v=20261117-093736"></script>
-<script src="story.js?v=20261117-093736"></script>
+<script src="audio.js?v=20261117-144541"></script>
+<script src="story.js?v=20261117-144541"></script>
 <script>
 (() => {
 const {ARCS,ARC_LINES,VARY2,FACE_TAGS,TUT,VARY,END,BOND,YEAR,POST,QUESTS4,CH4,TIPS:GUIDE,CH3,BAIC,EV_BAI,GOODS,SORT,QUESTS2,CH2,LIFE2,LIFE,MAGIC,TEA,HOUSES,STATS,STAT_ORDER,C:C12,BAI,GRAN,FACES,EV,QUESTS,MAIN,PROLOGUE,PLACES,LOOK,FREE,CLASS_TEXT,SCENE_IMG,SCENE_FALLBACK,CG} = window.STORY;
 // ---------- 語言 ----------
+// 日文：整句對應（S）＋句式對應（P）。找不到就保留原文並記錄，不做碎片替換。
 const JA = LANG === 'ja' && window.JA_DICT ? window.JA_DICT : null;
 const W = (zh, ja) => JA ? ja : zh;
-const JA_S = JA ? new Map(Object.entries(JA.S)) : null;
-const JA_F = JA ? Object.entries(JA.F).filter(([a]) => [...a].length >= 2).sort((a, b) => b[0].length - a[0].length) : null;
+const JA_S = JA ? new Map(Object.entries(JA.S)) : null, JA_VALS = JA ? new Set(Object.values(JA.S)) : null, JA_CACHE = new Map(), JA_OUT = new Set();
 const JA_WK = {'一':'月','二':'火','三':'水','四':'木','五':'金','六':'土','日':'日'};
-function trF(s){
-  for (const [a, b] of JA_F) if (s.includes(a)) s = s.split(a).join(b);
-  return s.replace(/週([一二三四五六日])/g, (m, d) => JA_WK[d] + '曜').replace(/([一二三])年級/g, '$1年生').replace(/靈石/g, '霊石');
+const RX_KANA = /[\u3041-\u3096\u30a1-\u30fa\u30fc-\u30ff]/, RX_HAN = /[㐀-鿿]/, RX_NUM = /^[\s\d〇一二三四五六七八九十百千兩+\-–—→×／\/:：.,，、。・%（）()「」『』《》！？…~～✦♥▸＋a-zA-Z_]*$/;
+const JA_P = JA ? JA.P.map(([zh, ja]) => {
+  const names = []; let lit = 0;
+  const src = zh.split(/(\{#?[^{}]+\})/).map(x => { const m = /^\{(#?)([^{}]+)\}$/.exec(x); if (!m){ lit += x.length; return x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); } names.push(m[2]); return m[1] ? '([0-9〇一二三四五六七八九十百千兩]+)' : '(.+?)'; }).join('');
+  return {re: new RegExp('^' + src + '$', 's'), ja, names, lit};
+}).sort((a, b) => b.lit - a.lit) : null;
+const jaMiss = s => { if (window.__JALOG) (window.__JA_MISS || (window.__JA_MISS = {}))[s] = 1; };
+const jaIsName = s => { try { return !!(S && S.name && s === S.name); } catch (e) { return false; } };
+function jaRes(s){
+  if (!RX_HAN.test(s) || RX_KANA.test(s) || RX_NUM.test(s)) return s;
+  const e = JA_S.get(s); if (e != null) return e;
+  if (JA_VALS.has(s) || JA_OUT.has(s) || jaIsName(s)) return s;
+  if (JA_CACHE.has(s)) return JA_CACHE.get(s);
+  let r = null;
+  for (const p of JA_P){
+    const m = p.re.exec(s); if (!m) continue;
+    const caps = {}; let ok = true;
+    p.names.forEach((n, i) => { const v = m[i + 1], c = /^\{[^{}]+\}$/.test(v) ? v : jaRes(v); if (c == null) ok = false; caps[n] = [v, c]; });
+    if (!ok) continue;
+    r = p.ja.replace(/\{#?([^{}|]+)(\|wk)?\}/g, (x, n, f) => caps[n] ? (f ? JA_WK[caps[n][0]] || caps[n][0] : caps[n][1]) : x); break;
+  }
+  if (r == null){
+    const w = /^([（「『《]?)(.*?)([）」』》。！？：，、…]*)$/s.exec(s);
+    if (w && (w[1] || w[3]) && w[2] && w[2] !== s){ const inner = jaRes(w[2]); if (inner != null) r = w[1] + inner + w[3]; }
+  }
+  if (r == null){
+    for (const sp of [/[^。！？\n]+[。！？\n]*[」』）]*|[。！？\n]+/g, '・', '、', '　', '：', '＋', ' ', '／']){
+      const parts = typeof sp === 'string' ? s.split(sp) : (s.match(sp) || []);
+      if (parts.length < 2) continue;
+      const ps = parts.map(x => x ? jaRes(x) : x), j = typeof sp === 'string' ? sp : '';
+      if (ps.every(x => x != null)){ r = ps.join(j); break; }
+      for (let i = 1; i < parts.length && r == null; i++){ if (i === 1 && parts.length === 2) break; const a = jaRes(parts.slice(0, i).join(j)), b = a != null ? jaRes(parts.slice(i).join(j)) : null; if (b != null) r = a + j + b; }
+      if (r != null) break;
+    }
+  }
+  JA_CACHE.set(s, r); if (r != null) JA_OUT.add(r); return r;
 }
 function tr(t){
   if (!JA || t == null) return t;
   let s = String(t); const m = /@[a-z]+$/.exec(s), suf = m ? m[0] : '';
   if (m) s = s.slice(0, m.index);
-  const e = JA_S.get(s);
-  return (e != null ? e : trF(s)) + suf;
+  const lead = /^\s*/.exec(s)[0], tail = /\s*$/.exec(s.slice(lead.length))[0], core = s.slice(lead.length, s.length - tail.length);
+  const r = core ? jaRes(core) : core;
+  if (r == null){ jaMiss(core); return s + suf; }
+  return lead + r + tail + suf;
 }
 if (JA){
-  const HAS = /[\u3400-\u9fff]/, ATTRS = ['placeholder', 'aria-label', 'title', 'alt'];
-  const doText = n => { if (n.parentNode && n.parentNode.closest && n.parentNode.closest('#line,[translate=no],textarea')) return; const v = n.data; if (!HAS.test(v)) return; const t = v.trim(), e = JA_S.get(t), r = e != null ? v.replace(t, e) : trF(v); if (r !== v) n.data = r; };
-  const doEl = el => { for (const a of ATTRS){ const v = el.getAttribute && el.getAttribute(a); if (v && HAS.test(v)){ const r = tr(v); if (r !== v) el.setAttribute(a, r); } } };
+  const ATTRS = ['placeholder', 'aria-label', 'title', 'alt'];
+  const doText = n => { const pn = n.parentNode; if (!pn || (pn.closest && pn.closest('#line,[translate=no],textarea,script,style'))) return; const v = n.data; if (!RX_HAN.test(v) || RX_KANA.test(v)) return; const r = tr(v); if (r !== v) n.data = r; };
+  const doEl = el => { for (const a of ATTRS){ const v = el.getAttribute && el.getAttribute(a); if (v && RX_HAN.test(v) && !RX_KANA.test(v)){ const r = tr(v); if (r !== v) el.setAttribute(a, r); } } };
   const walk = root => { if (root.nodeType === 3) return doText(root); if (root.nodeType !== 1) return; doEl(root); const it = document.createTreeWalker(root, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT); let n; while ((n = it.nextNode())) n.nodeType === 3 ? doText(n) : doEl(n); };
   walk(document.body);
   new MutationObserver(ms => { for (const m of ms){ if (m.type === 'characterData') doText(m.target); else if (m.type === 'attributes') doEl(m.target); else m.addedNodes.forEach(walk); } }).observe(document.body, {childList:true, subtree:true, characterData:true, attributes:true, attributeFilter:ATTRS});
@@ -1107,7 +1142,7 @@ function aff(id, v, daily){
 function note(t){ S.log.unshift({d:S.day, t:fmt(t)}); if (S.log.length > 80) S.log.pop(); }
 function setQuest(n){ S.quest = n; hud(); E.quest.classList.remove('flash'); void E.quest.offsetWidth; E.quest.classList.add('flash'); toast('主線更新・無名花影', true); }
 
-const cfmt = (t, ctx) => String(tr(t)).replace(/\{m\}/g, S.mentee && S.mentee.n ? S.mentee.n : W('學弟妹', '後輩')).replace(/\{g\}/g, ctx.c ? ctx.c.n : '').replace(/\{place\}/g, ctx.place || '');
+const cfmt = (t, ctx) => String(tr(t)).replace(/\{m\}/g, S.mentee && S.mentee.n ? tr(S.mentee.n) : W('學弟妹', '後輩')).replace(/\{g\}/g, ctx.c ? tr(ctx.c.n) : '').replace(/\{place\}/g, ctx.place ? tr(ctx.place) : '');
 async function run(seq, ctx = {}){
   for (const st of seq){
     const op = st[0];
@@ -2003,7 +2038,7 @@ async function board(){
   while (true){
     if (!S.comm.length){ await say('', '委託板上空空的。過幾天再來看看吧。'); return; }
     const opts = S.comm.map((a, k) => { const c = POST.COMM[a.i], left = a.due - S.day;
-      return {label:commWho(c), sub:`${c.t.length > 12 ? c.t.slice(0, 12) + '…' : c.t}・${left > 0 ? `還有 ${left} 天` : '今天截止'}${canDeliver(a) ? '・✦ 可以交付' : ''}`, value:k, hot:canDeliver(a), ...(BY[c.who] ? {img:BY[c.who].img, color:HOUSES[BY[c.who].h].color} : {icon:BOARD_IMG})}; });
+      return {label:commWho(c), sub:`${(t => t.length > 12 ? t.slice(0, 12) + '…' : t)(tr(c.t))}・${tr(left > 0 ? `還有 ${left} 天` : '今天截止')}${canDeliver(a) ? '・' + tr('✦ 可以交付') : ''}`, value:k, hot:canDeliver(a), ...(BY[c.who] ? {img:BY[c.who].img, color:HOUSES[BY[c.who].h].color} : {icon:BOARD_IMG})}; });
     opts.push({label:'離開委託板', value:null});
     const k = await choose(`委託板上貼著 ${S.comm.length} 張紙條。`, opts);
     if (k === null) return;
@@ -2572,7 +2607,7 @@ async function dayCard(d){
   else await card(`${wxi}<span class="big">${cn(dm)}日</span><span class="small">${cn(yearOf(d))}年級・${cn(mInYear(d))}月・週${WEEK[(d - 1) % 7]}${wx}</span>${sp}`, 1900);
 }
 function askName(){
-  setSpeaker(null); E.line.textContent = '在故事開始之前，告訴我你是誰。'; E.box.classList.add('wait');
+  setSpeaker(null); E.line.textContent = tr('在故事開始之前，告訴我你是誰。'); E.box.classList.add('wait');
   E.choices.classList.remove('two'); E.scrim.classList.add('on');
   E.choices.innerHTML = `<div class="who">
     <div class="seg" role="group" aria-label="性別"><button type="button" id="g-m" aria-pressed="false">男</button><button type="button" id="g-f" aria-pressed="false">女</button></div>
@@ -2996,7 +3031,7 @@ document.addEventListener('pointerdown', e => {
 }, true);
 window.__S = () => S;
 if (FAST) window.__D = () => ({C:C.map(c => c.id), lake:presentAt('lake').map(c => c.id), where:whereIs(BY.bai), ready:ready(BY.bai), ev:evState(BY.bai)});
-if (location.hash === '#shot') window.__T = {calConv, migrate, fresh, dateLabel, describe, plan, seasonOf, lifeGoal, graduation:() => graduation(), legacy:() => legacy(), pact:c => pactMoment(BY[c]), letter:() => { S.letterLast = -99; return letterNight(); }, pair:(k, p) => { useHp(2); return pairScene(k, PLACES.find(x => x.id === p)); }, yearend:() => yearend(), newyear:() => newyear(), menteeEvent:() => menteeEvent(), yulan:() => yulan(), board:() => board(), market:() => market(), setS:o => { S = migrate(o); hud(); }, arcAt, fmt, keyNeeds, setScene, hud, runStall, market, openTab, learnSpell, SPELL, serve, teaSheet, monthFest, dayCard, incident, run, opening, explore, free, practise, playGame, applyWx, keyTrial, assets, goodsShop, giftMenu: c => giftMenu(c)};
+if (location.hash === '#shot') window.__T = {tr, jaRes, calConv, migrate, fresh, dateLabel, describe, plan, seasonOf, lifeGoal, graduation:() => graduation(), legacy:() => legacy(), pact:c => pactMoment(BY[c]), letter:() => { S.letterLast = -99; return letterNight(); }, pair:(k, p) => { useHp(2); return pairScene(k, PLACES.find(x => x.id === p)); }, yearend:() => yearend(), newyear:() => newyear(), menteeEvent:() => menteeEvent(), yulan:() => yulan(), board:() => board(), market:() => market(), setS:o => { S = migrate(o); hud(); }, arcAt, fmt, keyNeeds, setScene, hud, runStall, market, openTab, learnSpell, SPELL, serve, teaSheet, monthFest, dayCard, incident, run, opening, explore, free, practise, playGame, applyWx, keyTrial, assets, goodsShop, giftMenu: c => giftMenu(c)};
 // ---------- loading screen ----------
 const imgURL = k => k.includes('/') ? k : `img/${k}.jpg`;
 function assets(){
