@@ -17,7 +17,7 @@ body{touch-action:manipulation;overscroll-behavior:none}
   padding:9px 18px;font:15px "LXGW WenKai TC","Kaiti TC",serif;letter-spacing:.12em;color:#fbf2df;cursor:pointer;
   background:rgba(22,15,11,.92);border:1px solid #ecd7a2;border-radius:999px;box-shadow:0 6px 20px rgba(0,0,0,.45);white-space:nowrap}
 </style>
-<script>window.GAME_VERSION = '20261117-145922';</script>
+<script>window.GAME_VERSION = '20261117-155447';</script>
 <title>花朝靈院</title>
 <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png">
@@ -590,16 +590,18 @@ html.lowfx .item.in{animation:itemIn 1.2s ease-out forwards}
 // 日文版仍在製作：網址加上 &ja 才會開啟語言切換
 window.JA_ON = true;
 window.LANG = (() => { try { return JA_ON && JSON.parse(localStorage.getItem('huachao-pref') || '{}').lang === 'ja' ? 'ja' : 'zh'; } catch (e) { return 'zh'; } })();
-if (LANG === 'ja'){ document.documentElement.lang = 'ja'; document.write('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap"><script src="story_ja.js?v=20261117-145922"><\/script>'); }
+if (LANG === 'ja'){ document.documentElement.lang = 'ja'; document.write('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap"><script src="story_ja.js?v=20261117-155447"><\/script>'); }
 </script>
-<script src="audio.js?v=20261117-145922"></script>
-<script src="story.js?v=20261117-145922"></script>
+<script src="audio.js?v=20261117-155447"></script>
+<script src="story.js?v=20261117-155447"></script>
 <script>
 (() => {
 const {ARCS,ARC_LINES,VARY2,FACE_TAGS,TUT,VARY,END,BOND,YEAR,POST,QUESTS4,CH4,TIPS:GUIDE,CH3,BAIC,EV_BAI,GOODS,SORT,QUESTS2,CH2,LIFE2,LIFE,MAGIC,TEA,HOUSES,STATS,STAT_ORDER,C:C12,BAI,GRAN,FACES,EV,QUESTS,MAIN,PROLOGUE,PLACES,LOOK,FREE,CLASS_TEXT,SCENE_IMG,SCENE_FALLBACK,CG} = window.STORY;
 // ---------- 語言 ----------
 // 日文：整句對應（S）＋句式對應（P）。找不到就保留原文並記錄，不做碎片替換。
 const JA = LANG === 'ja' && window.JA_DICT ? window.JA_DICT : null;
+// 譯文檔載入失敗（例如離線）：今次照用中文顯示，下次開啟會再試
+const JA_FAIL = LANG === 'ja' && !JA; if (JA_FAIL){ window.LANG = 'zh'; document.documentElement.removeAttribute('lang'); }
 const W = (zh, ja) => JA ? ja : zh;
 const JA_S = JA ? new Map(Object.entries(JA.S)) : null, JA_VALS = JA ? new Set(Object.values(JA.S)) : null, JA_CACHE = new Map(), JA_OUT = new Set();
 const JA_WK = {'一':'月','二':'火','三':'水','四':'木','五':'金','六':'土','日':'日'};
@@ -1139,7 +1141,9 @@ function aff(id, v, daily){
     if (v > 0){ const pp = document.createElement('span'); pp.className = 'affpop'; pp.textContent = '♥ +' + v; ar.appendChild(pp); } }
   if (stageOf(after) !== stageOf(before)) toast(`${BY[id].n}・好感「${stageOf(after)}」`, true);
 }
-function note(t){ S.log.unshift({d:S.day, t:fmt(t)}); if (S.log.length > 80) S.log.pop(); }
+// 日記存原文（中文），顯示時先 fmt／翻譯，咁樣中途轉語言日記都會跟住轉
+const noteText = l => typeof l === 'string' ? fmt(l) : fmt(l.p ? String(tr(l.t)).replace(/\{m\}/g, l.p.m ? tr(l.p.m) : W('學弟妹', '後輩')).replace(/\{g\}/g, l.p.g ? tr(l.p.g) : '').replace(/\{place\}/g, l.p.place ? tr(l.p.place) : '') : l.t);
+function note(t, ctx){ t = String(t); const e = {d:S.day, t}; if (ctx && /\{(m|g|place)\}/.test(t)) e.p = {m:S.mentee && S.mentee.n || '', g:ctx.c ? ctx.c.n : '', place:ctx.place || ''}; S.log.unshift(e); if (S.log.length > 80) S.log.pop(); }
 function setQuest(n){ S.quest = n; hud(); E.quest.classList.remove('flash'); void E.quest.offsetWidth; E.quest.classList.add('flash'); toast('主線更新・無名花影', true); }
 
 const cfmt = (t, ctx) => String(tr(t)).replace(/\{m\}/g, S.mentee && S.mentee.n ? tr(S.mentee.n) : W('學弟妹', '後輩')).replace(/\{g\}/g, ctx.c ? tr(ctx.c.n) : '').replace(/\{place\}/g, ctx.place ? tr(ctx.place) : '');
@@ -1157,7 +1161,7 @@ async function run(seq, ctx = {}){
         case '#item': { const el = $('item'); if (st[1]){ el.src = st[1]; el.hidden = false; el.className = 'item'; void el.offsetWidth; el.classList.add('in'); SND.sfx('magic'); await sleep(FAST ? 0 : 900); } else if (!el.hidden){ el.className = 'item out'; await sleep(FAST ? 0 : 500); el.hidden = true; } break; }
         case '#cg': if (CG[st[2]]){ setScene(st[1], CG[st[2]]); await sleep(600); } break;
         case '#quest': setQuest(st[1]); break;
-        case '#note': note(cfmt(st[1], ctx)); break;
+        case '#note': note(st[1], ctx); break;
         case '#if': if (S.flags[st[1]]) await run(st[2], ctx); else if (st[3]) await run(st[3], ctx); break;
         case '#ifhouse': if (S.house === st[1]) await run(st[2], ctx); else if (st[3]) await run(st[3], ctx); break;
         case '#line': { const L = ARC_LINES[st[1]], c = ctx.c; if (L && c && L[c.id]) await say(c.id, L[c.id]); break; }
@@ -2198,7 +2202,7 @@ function yearSnap(y){
   return {y, met:C.filter(c => S.met[c.id]).length, ev:Object.values(S.ev).reduce((a, b) => a + b, 0), spells:S.spells.length, known:S.known.length,
     earned:S.stall.earned || 0, sessions:S.stall.sessions || 0, comm:S.commDone || 0, replies:S.replies || 0, grades:S.grades.slice((y - 1) * 10, y * 10),
     fin:S.finals[y] || '', top, chap, mentee:S.mentee && S.mentee.y === y ? S.mentee.n : '', grads:(YEAR.GRAD[y] || []).filter(id => S.met[id]),
-    notes:S.log.filter(l => l.d > (y - 1) * YLEN && l.d <= y * YLEN && !/月考|結束/.test(l.t)).slice(-3).map(l => l.t), stats:{...S.stats}};
+    notes:S.log.filter(l => l.d > (y - 1) * YLEN && l.d <= y * YLEN && !/月考|結束/.test(l.t)).slice(-3).map(l => l.p ? {t:l.t, p:l.p} : l.t), stats:{...S.stats}};
 }
 function yearHTML(sn){
   const prev = S.years.find(x => x.y === sn.y - 1) || {ev:0, spells:0, known:0, earned:0, sessions:0, comm:0, replies:0, met:0};
@@ -2211,7 +2215,7 @@ function yearHTML(sn){
     ${sn.top.length ? `<p class="yr-p">這一年最親近的人</p><div class="yr-top">${sn.top.map(([id, v]) => BY[id] ? `<div><img src="${ava(BY[id].img)}" alt=""><b>${BY[id].n}</b>${heartsHTML(v)}<small>${stageOf(v)}</small></div>` : '').join('')}</div>` : ''}
     ${sn.mentee ? `<p class="yr-p">帶過的新生：${sn.mentee}</p>` : ''}
     ${sn.grads.length ? `<p class="yr-p">今年畢業：${sn.grads.map(id => BY[id].n).join('、')}</p>` : ''}
-    ${sn.notes.length ? `<ul class="yr-n">${sn.notes.map(t => `<li>${t}</li>`).join('')}</ul>` : ''}
+    ${sn.notes.length ? `<ul class="yr-n">${sn.notes.map(t => `<li>${noteText(t)}</li>`).join('')}</ul>` : ''}
   </div>`;
 }
 function yearsList(){
@@ -2694,7 +2698,7 @@ function openTab(t){
     h += STAT_ORDER.map(k => `<div class="stat" style="--c:var(--house)"><img class="sicon" src="img/stat_${k}.webp" alt=""><span class="k">${STATS[k][0]}<small>${STATS[k][1]}</small></span><div class="bar"><i style="width:${S.stats[k]}%"></i></div><span class="v">${S.stats[k]}</span></div>`).join('') + spellBook() + (S.house ? decorList() : '');
   } else {
     h = `<header><h2>手帳與日記</h2><button class="close" type="button">返回</button></header>${S.house ? handbook() : ''}<ul class="log">` +
-      (S.log.length ? S.log.map(l => `<li><b>${!l.d ? '序章' : monthOf(l.d) === 1 ? '第' + cn(l.d) + '日' : `${cn(mInYear(l.d))}月${cn(domOf(l.d))}日`}</b>${l.t}</li>`).join('') : '<li>還沒有記事。</li>') + '</ul>' + endingsList() + lettersList() + yearsList() + tipsList();
+      (S.log.length ? S.log.map(l => `<li><b>${!l.d ? '序章' : monthOf(l.d) === 1 ? '第' + cn(l.d) + '日' : `${cn(mInYear(l.d))}月${cn(domOf(l.d))}日`}</b>${noteText(l)}</li>`).join('') : '<li>還沒有記事。</li>') + '</ul>' + endingsList() + lettersList() + yearsList() + tipsList();
   }
   E.sheet.innerHTML = h; E.sheet.hidden = false; E.sheet.scrollTop = 0;
   bindClose();
@@ -2820,7 +2824,7 @@ function arm(b, text){
 function saveAct(b){
   const act = b.dataset.act, k = b.dataset.k, key = k === 'auto' ? KEY : slotKey(k);
   if (act === 'update'){ if (window.checkUpdate) window.checkUpdate(true); return; }
-  if (act === 'lang'){ if (k !== LANG) setLang(k); return; }
+  if (act === 'lang'){ if (k !== LANG || JA_FAIL) setLang(k); return; }
   if (act === 'speed'){ PREF.speed = k; savePref(); SND.sfx('tap'); saveSheet(); return; }
   if (act === 'backlog'){ backlog(); return; }
   if (act === 'skip'){ setSkip(!PREF.skip, true); saveSheet(); return; }
@@ -2981,13 +2985,22 @@ async function loop(){
   }
 }
 const LANG_OPT = () => ({label: LANG === 'ja' ? '繁體中文' : '日本語', sub: LANG === 'ja' ? '語言・言語' : '言語を日本語に切り替え', value:'lang', noT:true});
-function setLang(to){ PREF.lang = to || (LANG === 'ja' ? 'zh' : 'ja'); savePref(); if (S && S.house) store(BOOT, JSON.stringify(S)); location.reload(); }
+// 切換語言：回到這個時段開頭的自動存檔（同讀檔一樣），重新載入後直接返回遊戲，唔使再撳一次開始
+function setLang(to){
+  PREF.lang = to || (LANG === 'ja' ? 'zh' : 'ja'); savePref();
+  let ok = false; try { ok = !!(CK && valid(JSON.parse(CK))); } catch (e) {}
+  if (ok) store(BOOT, CK);
+  try { sessionStorage.setItem('huachao-langsw', ok ? 'game' : 'title'); } catch (e) {}
+  location.reload();
+}
+const LANG_SW = (() => { try { const v = sessionStorage.getItem('huachao-langsw'); sessionStorage.removeItem('huachao-langsw'); return v; } catch (e) { return null; } })();
 async function main(){
   if (FAST && window.__PRESET){ S = migrate(Object.assign(fresh(), {cal:undefined}, JSON.parse(JSON.stringify(window.__PRESET)))); hud(); loop(); return; }
+  if (JA_FAIL) setTimeout(() => toast('日本語データを読み込めませんでした。通信環境を確認してください。'), 2600);
   const boot = readRaw(BOOT);
   if (boot){
     store(BOOT, null);
-    try { const v = JSON.parse(boot); if (valid(v)){ S = migrate(v); hud(); toast('已讀取存檔'); loop(); return; } } catch (e) {}
+    try { const v = JSON.parse(boot); if (valid(v)){ S = migrate(v); hud(); toast(LANG_SW ? W('已切換為繁體中文', '日本語に切り替えました') : '已讀取存檔'); loop(); return; } } catch (e) {}
   }
   setScene('花朝正殿'); hud();
   const auto = readSave(KEY);
@@ -3031,7 +3044,7 @@ document.addEventListener('pointerdown', e => {
 }, true);
 window.__S = () => S;
 if (FAST) window.__D = () => ({C:C.map(c => c.id), lake:presentAt('lake').map(c => c.id), where:whereIs(BY.bai), ready:ready(BY.bai), ev:evState(BY.bai)});
-if (location.hash === '#shot') window.__T = {tr, playGame, jaRes, calConv, migrate, fresh, dateLabel, describe, plan, seasonOf, lifeGoal, graduation:() => graduation(), legacy:() => legacy(), pact:c => pactMoment(BY[c]), letter:() => { S.letterLast = -99; return letterNight(); }, pair:(k, p) => { useHp(2); return pairScene(k, PLACES.find(x => x.id === p)); }, yearend:() => yearend(), newyear:() => newyear(), menteeEvent:() => menteeEvent(), yulan:() => yulan(), board:() => board(), market:() => market(), setS:o => { S = migrate(o); hud(); }, arcAt, fmt, keyNeeds, setScene, hud, runStall, market, openTab, learnSpell, SPELL, serve, teaSheet, monthFest, dayCard, incident, run, opening, explore, free, practise, playGame, applyWx, keyTrial, assets, goodsShop, giftMenu: c => giftMenu(c)};
+if (location.hash === '#shot') window.__T = {tr, playGame, note, noteText, runStall:() => runStall(), research:() => research(), goodsShop:() => goodsShop(), free:() => free(), rest:() => rest(), lunch:() => lunch(), cls:() => cls(), monthFest:() => monthFest(), exam:() => exam(), explore:p => explore(p), festival:() => festival(), jaRes, calConv, migrate, fresh, dateLabel, describe, plan, seasonOf, lifeGoal, graduation:() => graduation(), legacy:() => legacy(), pact:c => pactMoment(BY[c]), letter:() => { S.letterLast = -99; return letterNight(); }, pair:(k, p) => { useHp(2); return pairScene(k, PLACES.find(x => x.id === p)); }, yearend:() => yearend(), newyear:() => newyear(), menteeEvent:() => menteeEvent(), yulan:() => yulan(), board:() => board(), market:() => market(), setS:o => { S = migrate(o); hud(); }, arcAt, fmt, keyNeeds, setScene, hud, runStall, market, openTab, learnSpell, SPELL, serve, teaSheet, monthFest, dayCard, incident, run, opening, explore, free, practise, playGame, applyWx, keyTrial, assets, goodsShop, giftMenu: c => giftMenu(c)};
 // ---------- loading screen ----------
 const imgURL = k => k.includes('/') ? k : `img/${k}.jpg`;
 function assets(){
@@ -3075,7 +3088,9 @@ async function boot(){
   show(0);
   const fonts = (document.fonts && document.fonts.ready ? Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 4000))]) : Promise.resolve()).then(step);
   await Promise.race([Promise.all([preload(core, step), fonts]), new Promise(r => setTimeout(r, 20000))]);
-  show(100); sp.classList.add('ready');
+  show(100);
+  if (LANG_SW){ sp.classList.add('out'); setTimeout(() => sp.remove(), 800); trickle(rest); return main(); }
+  sp.classList.add('ready');
   await new Promise(r => { sp.addEventListener('click', r, {once:true}); sp.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') r(); }, {once:true}); });
   SND.sfx('choose'); sp.classList.add('out'); setTimeout(() => sp.remove(), 800);
   trickle(rest);
