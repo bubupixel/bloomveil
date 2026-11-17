@@ -17,7 +17,7 @@ body{touch-action:manipulation;overscroll-behavior:none}
   padding:9px 18px;font:15px "LXGW WenKai TC","Kaiti TC",serif;letter-spacing:.12em;color:#fbf2df;cursor:pointer;
   background:rgba(22,15,11,.92);border:1px solid #ecd7a2;border-radius:999px;box-shadow:0 6px 20px rgba(0,0,0,.45);white-space:nowrap}
 </style>
-<script>window.GAME_VERSION = '20261117-214211';</script>
+<script>window.GAME_VERSION = '20261117-220512';</script>
 <title>花朝靈院</title>
 <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png">
@@ -590,10 +590,10 @@ html.lowfx .item.in{animation:itemIn 1.2s ease-out forwards}
 // 日文版仍在製作：網址加上 &ja 才會開啟語言切換
 window.JA_ON = true;
 window.LANG = (() => { try { return JA_ON && JSON.parse(localStorage.getItem('huachao-pref') || '{}').lang === 'ja' ? 'ja' : 'zh'; } catch (e) { return 'zh'; } })();
-if (LANG === 'ja'){ document.documentElement.lang = 'ja'; document.write('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap"><script src="story_ja.js?v=20261117-214211"><\/script>'); }
+if (LANG === 'ja'){ document.documentElement.lang = 'ja'; document.write('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap"><script src="story_ja.js?v=20261117-220512"><\/script>'); }
 </script>
-<script src="audio.js?v=20261117-214211"></script>
-<script src="story.js?v=20261117-214211"></script>
+<script src="audio.js?v=20261117-220512"></script>
+<script src="story.js?v=20261117-220512"></script>
 <script>
 (() => {
 const {ARCS,ARC_LINES,VARY2,FACE_TAGS,TUT,VARY,END,BOND,YEAR,POST,QUESTS4,CH4,TIPS:GUIDE,CH3,BAIC,EV_BAI,GOODS,SORT,QUESTS2,CH2,LIFE2,LIFE,MAGIC,TEA,HOUSES,STATS,STAT_ORDER,C:C12,BAI,GRAN,FACES,EV,QUESTS,MAIN,PROLOGUE,PLACES,LOOK,FREE,CLASS_TEXT,SCENE_IMG,SCENE_FALLBACK,CG} = window.STORY;
@@ -701,7 +701,7 @@ function calMigrate(v){
   if (v.blight && typeof v.blight.d === 'number') v.blight.d = v.day;
   if (v.promise && typeof v.promise.day === 'number') v.promise = null;
 }
-function migrate(v){ if (!v) return v; v.wish ??= {}; if (v.cal !== 2){ if ((v.day || 0) > 28) calMigrate(v); v.cal = 2; } v.hp ??= 10; v.hpBonus ??= 0; v.inv ??= {}; v.known ??= []; v.cups ??= {}; v.stall ??= {}; v.stall.open ??= false; v.stall.rep ??= 0; v.stall.ups ??= {}; v.stall.earned ??= 0; v.stall.sessions ??= 0; v.mag ??= {}; v.spells ??= []; v.sfrac ??= {}; v.affDay ??= {}; v.seen ??= {}; v.flags ??= {}; v.grades ??= []; v.q2 ??= 0; v.items ??= {}; v.decor ??= {}; v.parcel ??= 0; v.replies ??= 0; v.giftDay ??= {}; v.wx ??= 'sun'; v.bdDone ??= {}; v.promise ??= null; v.broken ??= null; v.keys ??= {}; v.keyHint ??= {}; v.col ??= {}; v.col.gift ??= {}; v.col.inc ??= {}; v.col.fest ??= {}; v.col.bd ??= {}; if (!v.aff2){ v.aff2 = 1; for (const k in (v.aff || {})) v.aff[k] = Math.min(200, v.aff[k] * 2); }
+function migrate(v){ if (!v) return v; v.wish ??= {}; v.afrac ??= {}; v.relWait ??= {}; v.evPace ??= (v.day || 0) > 1 ? 'old' : 'new'; if (v.cal !== 2){ if ((v.day || 0) > 28) calMigrate(v); v.cal = 2; } v.hp ??= 10; v.hpBonus ??= 0; v.inv ??= {}; v.known ??= []; v.cups ??= {}; v.stall ??= {}; v.stall.open ??= false; v.stall.rep ??= 0; v.stall.ups ??= {}; v.stall.earned ??= 0; v.stall.sessions ??= 0; v.mag ??= {}; v.spells ??= []; v.sfrac ??= {}; v.affDay ??= {}; v.seen ??= {}; v.flags ??= {}; v.grades ??= []; v.q2 ??= 0; v.items ??= {}; v.decor ??= {}; v.parcel ??= 0; v.replies ??= 0; v.giftDay ??= {}; v.wx ??= 'sun'; v.bdDone ??= {}; v.promise ??= null; v.broken ??= null; v.keys ??= {}; v.keyHint ??= {}; v.col ??= {}; v.col.gift ??= {}; v.col.inc ??= {}; v.col.fest ??= {}; v.col.bd ??= {}; if (!v.aff2){ v.aff2 = 1; for (const k in (v.aff || {})) v.aff[k] = Math.min(200, v.aff[k] * 2); }
   v.rel ??= {}; v.relDay ??= {}; v.relAsk ??= {}; v.pairs ??= {}; v.pairDay ??= {}; v.letters ??= []; v.letterLast ??= 0;
   v.years ??= []; v.grad ??= {}; v.mentee ??= null; v.finals ??= {};
   v.comm ??= []; v.commDone ??= 0; v.commLast ??= {}; v.col.comm ??= {}; v.col.hue ??= {};
@@ -1120,15 +1120,18 @@ function gain(k, v){
   SND.sfx('gain'); return add;
 }
 // 好感：越親近，越需要時間；日常相處每人每天最多 +3（事件與節慶不受此限）
-const AFF_DAY = 6, PACE = 2;   // 學年縮短後，日常成長加倍
+const AFF_DAY = 6, PACE = 2, AFF_K = .4;
+// 角色事件最早日子（第 i 個事件）：八個事件分佈到三年，最後一個（可以成為戀人）最早二年級尾
+const EV_MIN = [0, 8, 24, 48, 84, 126, 168, 210];   // 學年縮短後，日常成長加倍
 const evTotal = () => C.reduce((a, c) => a + (EV[c.id] ? EV[c.id].length : 0), 0);
 function aff(id, v, daily){
   if (v > 0 && S.house && BY[id] && BY[id].h === S.house && hasFx('bond')) v = Math.ceil(v * 1.2);
   const before = S.aff[id] || 0;
   if (v > 0){
-    v = Math.max(1, Math.round(v * Math.max(.12, 1 - before / 215)));
+    // 好感放慢到三年：所有增加乘 AFF_K，零碎部分累積（S.afrac），唔會一下子封頂
+    const x = v * Math.max(.12, 1 - before / 215) * (daily ? PACE : 1) * AFF_K + (S.afrac[id] || 0);
+    v = Math.floor(x); S.afrac[id] = x - v; if (v <= 0) return 0;
     if (daily){
-      v *= PACE;
       const t = S.affDay[id] && S.affDay[id][0] === S.day ? S.affDay[id][1] : 0;
       v = Math.min(v, AFF_DAY + (hasFx('echo') ? 1 : 0) - t); if (v <= 0) return 0;
       S.affDay[id] = [S.day, t + v];
@@ -1284,6 +1287,7 @@ function evState(c){
   const i = S.ev[c.id] || 0, e = EV[c.id][i];
   if (!e || (S.aff[c.id] || 0) < e.need || S.evDay[c.id] === S.day) return null;
   if (i >= 4 && S.evDay[c.id] && S.day - S.evDay[c.id] < 3) return null;
+  if (c.id !== 'bai' && S.evPace === 'new' && S.day < (EV_MIN[i] || 0)) return null;
   if (e.stat && S.stats[e.stat[0]] < e.stat[1]) return {e, i, locked:true};
   return {e, i};
 }
@@ -1943,7 +1947,7 @@ const nextKeyDay = () => { const n = KEY_HOUSES.filter(h => S.keys[h]).length; r
 function keyNeeds(h){
   const g = keyGuide(h), needs = [], nk = S.keyPace === 'new' ? nextKeyDay() : 0;
   if (nk > S.day) needs.push(`等到${dateLabel(nk)}，花鑰才會醒來`);
-  if (!g || (S.aff[g.id] || 0) < 90) needs.push(`一位${HOUSES[h].name}的知己（好感 90）`);
+  if (!g || (S.aff[g.id] || 0) < 70) needs.push(`一位${HOUSES[h].name}的好友（好感 70）`);
   if (h === S.house){ const t3 = MAGIC.HOUSE[h][2]; if (!S.spells.includes(t3.id)) needs.push(`習得術譜第三層「${t3.n}」`); }
   else if (S.stats[HOUSES[h].stat] < (S.keyPace === 'new' ? 40 : 30)) needs.push(`${STATS[HOUSES[h].stat][0]}達到 ${S.keyPace === 'new' ? 40 : 30}`);
   return needs;
@@ -1987,7 +1991,7 @@ const ch4Friend = h => C.filter(c => c.h === h && S.met[c.id]).sort((a, b) => (S
 function ch4Needs(){
   const n = [];
   if (S.purged < 6) n.push(`淨化蝕痕 ${S.purged}/6`);
-  for (const h of KEY_HOUSES){ const f = ch4Friend(h); if (!f || (S.aff[f.id] || 0) < 110) n.push(`一位${HOUSES[h].name}的朋友（好感 110）`); }
+  for (const h of KEY_HOUSES){ const f = ch4Friend(h); if (!f || (S.aff[f.id] || 0) < 90) n.push(`一位${HOUSES[h].name}的朋友（好感 90）`); }
   return n;
 }
 function q4Goal(){
@@ -2128,7 +2132,9 @@ async function pactMoment(c){
   if (!R || ev < 6) return false;
   const canLove = ev >= 8 && !Object.values(S.rel).includes('love');
   const stage = ev >= 8 ? 8 : 6;
-  if ((S.relAsk[c.id] || 0) >= stage || cur === 'love' || (cur === 'friend' && !canLove)) return false;
+  // 揀咗「再等等」：兩個星期後會再問一次（以前會永遠錯過）
+  const asked = S.relAsk[c.id] || 0;
+  if (asked >= stage || (asked === stage - .5 && S.day - (S.relWait[c.id] || 0) < 14) || cur === 'love' || (cur === 'friend' && !canLove)) return false;
   S.relAsk[c.id] = stage;
   await tip('bond');
   await say(c.id, R.pact, 'shy');
@@ -2137,7 +2143,7 @@ async function pactMoment(c){
   if (!cur) opts.push({label:BOND.ASK.friend, value:'friend'});
   opts.push({label:BOND.ASK.wait, value:'wait'});
   const v = await choose(`${c.n}在等你的回答。`, opts);
-  if (v === 'wait'){ await say(c.id, BOND.WAIT); return true; }
+  if (v === 'wait'){ S.relAsk[c.id] = stage - .5; S.relWait[c.id] = S.day; await say(c.id, BOND.WAIT); return true; }
   S.rel[c.id] = v; S.relDay[c.id] = S.day; SND.sfx('magic');
   await say(c.id, v === 'love' ? R.love : R.friend, 'happy');
   aff(c.id, v === 'love' ? 15 : 10);
