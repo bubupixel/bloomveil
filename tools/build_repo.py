@@ -32,6 +32,7 @@ META = '''<meta charset="utf-8">
 body = open(src, encoding='utf-8').read()
 for name in ('audio.js', 'story.js'):
     body = body.replace(f'<script src="{name}"></script>', f'<script src="{name}?v={ver}"></script>')
+body = body.replace('<script src="story_ja.js"><\\/script>', f'<script src="story_ja.js?v={ver}"><\\/script>')
 
 game_head = '''<!doctype html>
 <html lang="zh-Hant">

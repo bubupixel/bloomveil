@@ -17,7 +17,7 @@ body{touch-action:manipulation;overscroll-behavior:none}
   padding:9px 18px;font:15px "LXGW WenKai TC","Kaiti TC",serif;letter-spacing:.12em;color:#fbf2df;cursor:pointer;
   background:rgba(22,15,11,.92);border:1px solid #ecd7a2;border-radius:999px;box-shadow:0 6px 20px rgba(0,0,0,.45);white-space:nowrap}
 </style>
-<script>window.GAME_VERSION = '20261113-221830';</script>
+<script>window.GAME_VERSION = '20261117-093736';</script>
 <title>花朝靈院</title>
 <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png">
@@ -44,6 +44,7 @@ body{touch-action:manipulation;overscroll-behavior:none}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html{height:100%;background:var(--night)}
+html[lang=ja]{--f:"Klee One","LXGW WenKai TC","Hiragino Mincho ProN",serif}
 body{height:100%;margin:0;overflow:hidden;background:var(--night);color:var(--ink);font-family:var(--f);font-size:16px;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
 button{font:inherit;color:inherit}
 button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--gold-hi);outline-offset:2px}
@@ -585,11 +586,42 @@ html.lowfx .item.in{animation:itemIn 1.2s ease-out forwards}
     <div class="sp-tip" id="sptip"></div>
   </div>
 </div>
-<script src="audio.js?v=20261113-221830"></script>
-<script src="story.js?v=20261113-221830"></script>
+<script>
+// 日文版仍在製作：網址加上 &ja 才會開啟語言切換
+window.JA_ON = /[#&]ja\b/.test(location.hash);
+window.LANG = (() => { try { return JA_ON && JSON.parse(localStorage.getItem('huachao-pref') || '{}').lang === 'ja' ? 'ja' : 'zh'; } catch (e) { return 'zh'; } })();
+if (LANG === 'ja'){ document.documentElement.lang = 'ja'; document.write('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap"><script src="story_ja.js?v=20261117-093736"><\/script>'); }
+</script>
+<script src="audio.js?v=20261117-093736"></script>
+<script src="story.js?v=20261117-093736"></script>
 <script>
 (() => {
 const {ARCS,ARC_LINES,VARY2,FACE_TAGS,TUT,VARY,END,BOND,YEAR,POST,QUESTS4,CH4,TIPS:GUIDE,CH3,BAIC,EV_BAI,GOODS,SORT,QUESTS2,CH2,LIFE2,LIFE,MAGIC,TEA,HOUSES,STATS,STAT_ORDER,C:C12,BAI,GRAN,FACES,EV,QUESTS,MAIN,PROLOGUE,PLACES,LOOK,FREE,CLASS_TEXT,SCENE_IMG,SCENE_FALLBACK,CG} = window.STORY;
+// ---------- 語言 ----------
+const JA = LANG === 'ja' && window.JA_DICT ? window.JA_DICT : null;
+const W = (zh, ja) => JA ? ja : zh;
+const JA_S = JA ? new Map(Object.entries(JA.S)) : null;
+const JA_F = JA ? Object.entries(JA.F).filter(([a]) => [...a].length >= 2).sort((a, b) => b[0].length - a[0].length) : null;
+const JA_WK = {'一':'月','二':'火','三':'水','四':'木','五':'金','六':'土','日':'日'};
+function trF(s){
+  for (const [a, b] of JA_F) if (s.includes(a)) s = s.split(a).join(b);
+  return s.replace(/週([一二三四五六日])/g, (m, d) => JA_WK[d] + '曜').replace(/([一二三])年級/g, '$1年生').replace(/靈石/g, '霊石');
+}
+function tr(t){
+  if (!JA || t == null) return t;
+  let s = String(t); const m = /@[a-z]+$/.exec(s), suf = m ? m[0] : '';
+  if (m) s = s.slice(0, m.index);
+  const e = JA_S.get(s);
+  return (e != null ? e : trF(s)) + suf;
+}
+if (JA){
+  const HAS = /[\u3400-\u9fff]/, ATTRS = ['placeholder', 'aria-label', 'title', 'alt'];
+  const doText = n => { if (n.parentNode && n.parentNode.closest && n.parentNode.closest('#line,[translate=no],textarea')) return; const v = n.data; if (!HAS.test(v)) return; const t = v.trim(), e = JA_S.get(t), r = e != null ? v.replace(t, e) : trF(v); if (r !== v) n.data = r; };
+  const doEl = el => { for (const a of ATTRS){ const v = el.getAttribute && el.getAttribute(a); if (v && HAS.test(v)){ const r = tr(v); if (r !== v) el.setAttribute(a, r); } } };
+  const walk = root => { if (root.nodeType === 3) return doText(root); if (root.nodeType !== 1) return; doEl(root); const it = document.createTreeWalker(root, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT); let n; while ((n = it.nextNode())) n.nodeType === 3 ? doText(n) : doEl(n); };
+  walk(document.body);
+  new MutationObserver(ms => { for (const m of ms){ if (m.type === 'characterData') doText(m.target); else if (m.type === 'attributes') doEl(m.target); else m.addedNodes.forEach(walk); } }).observe(document.body, {childList:true, subtree:true, characterData:true, attributes:true, attributeFilter:ATTRS});
+}
 // 白溯光在第三章之後才加入名單；C 是目前看得見的人
 const C_ALL = [...C12, BAIC];
 let C = C12.slice();
@@ -616,7 +648,23 @@ const slotKey = i => `huachao-v2-s${i}`;
 const fresh = () => migrate({v:2,name:'',gender:'',house:null,day:0,slot:0,money:50,cake:0,
   stats:{ling:5,bo:5,qiao:5,sheng:5,gan:5,feng:5},aff:{},met:{},ev:{},evDay:{},hint:{},flags:{},quest:0,log:[],today:[]});
 // 舊存檔補上新系統的欄位
-function migrate(v){ if (!v) return v; v.hp ??= 10; v.hpBonus ??= 0; v.inv ??= {}; v.known ??= []; v.cups ??= {}; v.stall ??= {}; v.stall.open ??= false; v.stall.rep ??= 0; v.stall.ups ??= {}; v.stall.earned ??= 0; v.stall.sessions ??= 0; v.mag ??= {}; v.spells ??= []; v.sfrac ??= {}; v.affDay ??= {}; v.seen ??= {}; v.flags ??= {}; v.grades ??= []; v.q2 ??= 0; v.items ??= {}; v.decor ??= {}; v.parcel ??= 0; v.replies ??= 0; v.giftDay ??= {}; v.wx ??= 'sun'; v.bdDone ??= {}; v.promise ??= null; v.broken ??= null; v.keys ??= {}; v.keyHint ??= {}; v.col ??= {}; v.col.gift ??= {}; v.col.inc ??= {}; v.col.fest ??= {}; v.col.bd ??= {}; if (!v.aff2){ v.aff2 = 1; for (const k in (v.aff || {})) v.aff[k] = Math.min(200, v.aff[k] * 2); }
+// 舊曆法（每月 28 日、十個月）的日子換算成新曆法：第一章的 28 日不變，之後按比例縮短
+const calConv = d => { if (!(d > 28)) return d; const y = Math.floor((d - 1) / 280), r = (d - 1) % 280; let n = y ? Math.floor(r * .4) + 1 : 28 + Math.round((d - 28) / 3); n = r === 279 ? 112 : r === 0 ? 1 : Math.max(y ? 2 : 29, Math.min(111, n)); return y * 112 + n; };
+function calMigrate(v){
+  const c = calConv, map = o => { if (o) for (const k in o) if (typeof o[k] === 'number') o[k] = c(o[k]); };
+  v.day = c(v.day); v.slot = 0; v.today = [];
+  for (const k of ['keyDay','ch2Day','ch3Day','ch4Day','guDay','q4Day','arcDay','expDay','expNag','letterLast','bellDay','parcel']) if (typeof v[k] === 'number') v[k] = c(v[k]);
+  for (const k of ['evDay','giftDay','relDay','pairDay','commLast']) map(v[k]);
+  for (const k in (v.affDay || {})) if (Array.isArray(v.affDay[k])) v.affDay[k][0] = c(v.affDay[k][0]);
+  for (const a of (v.comm || [])){ const left = Math.max(1, (a.due || 0) - (a.d || 0)); a.d = c(a.d); a.due = a.d + left; }
+  for (const k in (v.arc || {})) if (v.arc[k] && typeof v.arc[k].d === 'number') v.arc[k].d = c(v.arc[k].d);
+  for (const l of (v.log || [])) if (typeof l.d === 'number') l.d = c(l.d);
+  for (const l of (v.letters || [])) if (typeof l.d === 'number') l.d = c(l.d);
+  if (v.mentee && typeof v.mentee.last === 'number') v.mentee.last = c(v.mentee.last);
+  if (v.blight && typeof v.blight.d === 'number') v.blight.d = v.day;
+  if (v.promise && typeof v.promise.day === 'number') v.promise = null;
+}
+function migrate(v){ if (!v) return v; if (v.cal !== 2){ if ((v.day || 0) > 28) calMigrate(v); v.cal = 2; } v.hp ??= 10; v.hpBonus ??= 0; v.inv ??= {}; v.known ??= []; v.cups ??= {}; v.stall ??= {}; v.stall.open ??= false; v.stall.rep ??= 0; v.stall.ups ??= {}; v.stall.earned ??= 0; v.stall.sessions ??= 0; v.mag ??= {}; v.spells ??= []; v.sfrac ??= {}; v.affDay ??= {}; v.seen ??= {}; v.flags ??= {}; v.grades ??= []; v.q2 ??= 0; v.items ??= {}; v.decor ??= {}; v.parcel ??= 0; v.replies ??= 0; v.giftDay ??= {}; v.wx ??= 'sun'; v.bdDone ??= {}; v.promise ??= null; v.broken ??= null; v.keys ??= {}; v.keyHint ??= {}; v.col ??= {}; v.col.gift ??= {}; v.col.inc ??= {}; v.col.fest ??= {}; v.col.bd ??= {}; if (!v.aff2){ v.aff2 = 1; for (const k in (v.aff || {})) v.aff[k] = Math.min(200, v.aff[k] * 2); }
   v.rel ??= {}; v.relDay ??= {}; v.relAsk ??= {}; v.pairs ??= {}; v.pairDay ??= {}; v.letters ??= []; v.letterLast ??= 0;
   v.years ??= []; v.grad ??= {}; v.mentee ??= null; v.finals ??= {};
   v.comm ??= []; v.commDone ??= 0; v.commLast ??= {}; v.col.comm ??= {}; v.col.hue ??= {};
@@ -711,11 +759,11 @@ const E = {app:$('app'),bgA:$('bgA'),bgB:$('bgB'),backdrop:$('backdrop'),portrai
   quest:$('quest'),place:$('place'),scrim:$('scrim'),choices:$('choices'),box:$('box'),speaker:$('speaker'),line:$('line'),more:$('more'),
   sheet:$('sheet'),card:$('card'),toast:$('toast')};
 const ava = n => n >= 1 && n <= 13 ? `img/a${String(n).padStart(2,'0')}_2.webp` : `img/a${String(n).padStart(2,'0')}.jpg`;
-const menteeG = () => { const m = S.mentee && Object.values(YEAR.MENTEE).find(x => x.n === S.mentee.n); return m && m.g === 'm' ? '他' : '她'; };
+const menteeG = () => { const m = S.mentee && Object.values(YEAR.MENTEE).find(x => x.n === S.mentee.n); return m && m.g === 'm' ? W('他', '彼') : W('她', '彼女'); };
 // 顧長庚失蹤了多久：入學前一年，加上到現在（回來之後就定格）
-function goneYears(){ const d = S.flags && S.flags.guBack ? (S.guDay || S.day) : S.day, y = 1 + Math.max(0, d - 1) / 280;
-  return y < 1.4 ? '一年' : y < 1.8 ? '一年多' : y < 2.3 ? '兩年' : y < 2.8 ? '兩年多' : '快三年'; }
-const fmt = t => String(t).replace(/顧長庚/g, m => S.flags && (S.flags.ch3done || S.flags.guBack) ? m : '那位同屆的學長').replace(/長庚/g, m => S.flags && (S.flags.ch3done || S.flags.guBack) ? m : '他').replace(/\{gy\}/g, () => goneYears()).replace(/\{n\}/g, S.name).replace(/\{弟妹\}/g, S.gender === 'm' ? '學弟' : '學妹').replace(/\{學長姊\}/g, S.gender === 'm' ? '學長' : '學姊').replace(/\{ta\}/g, menteeG());
+function goneYears(){ const d = S.flags && S.flags.guBack ? (S.guDay || S.day) : S.day, y = 1 + Math.max(0, d - 1) / 112;
+  return y < 1.4 ? W('一年', '一年') : y < 1.8 ? W('一年多', '一年あまり') : y < 2.3 ? W('兩年', '二年') : y < 2.8 ? W('兩年多', '二年あまり') : W('快三年', '三年近く'); }
+const fmt = t => String(tr(t)).replace(/顧長庚/g, m => S.flags && (S.flags.ch3done || S.flags.guBack) ? m : W('那位同屆的學長', 'あの先輩')).replace(/長庚/g, m => S.flags && (S.flags.ch3done || S.flags.guBack) ? m : W('他', '彼')).replace(/\{gy\}/g, () => goneYears()).replace(/\{n\}/g, S.name).replace(/\{弟妹\}/g, W(S.gender === 'm' ? '學弟' : '學妹', '後輩')).replace(/\{學長姊\}/g, W(S.gender === 'm' ? '學長' : '學姊', '先輩')).replace(/\{ta\}/g, menteeG());
 const sleep = ms => new Promise(r => setTimeout(r, FAST ? 0 : ms));
 const pick = a => a[Math.floor(Math.random() * a.length)];
 const pc = () => { const g = S.gender === 'f' ? 'fc' : 'mc'; return {id:'me', n:S.name, h:S.house || 'yu', src:`img/${S.house ? g + '_' + S.house + (g === 'fc' ? '_2' : '') : g + '0'}.jpg`}; };
@@ -997,13 +1045,13 @@ function choose(prompt, opts){
       if (o.disabled) b.disabled = true;
       if (o.img){ const im = document.createElement('img'); im.src = ava(o.img); im.alt = ''; b.appendChild(im); }
       else if (o.icon){ const im = document.createElement('img'); im.src = o.icon; im.alt = ''; im.className = 'ic'; b.appendChild(im); }
-      const t = document.createElement('span'); t.className = 't'; t.textContent = fmt(o.label); b.appendChild(t);
+      const t = document.createElement('span'); t.className = 't'; t.textContent = o.noT ? o.label : fmt(o.label); if (o.noT) b.setAttribute('translate', 'no'); b.appendChild(t);
       if (o.sub){ const s = document.createElement('span'); s.className = 'sub' + (o.hot ? ' hot' : ''); s.textContent = o.sub; b.appendChild(s); }
       b.onclick = () => { SND.sfx('choose'); logLine('', '▸ ' + fmt(o.label), 'pick'); E.choices.innerHTML = ''; E.choices.classList.remove('hasmore'); document.querySelectorAll('.morehint').forEach(x => x.remove()); E.scrim.classList.remove('on'); E.box.classList.remove('wait'); res(o.value); };
       E.choices.appendChild(b);
     });
     moreHint();
-    if (FAST) setTimeout(() => { const bs = [...E.choices.querySelectorAll('button:not([disabled])')]; if (bs.length) pick(bs).click(); }, 0);
+    if (FAST) setTimeout(() => { const bs = [...E.choices.querySelectorAll('button:not([disabled])')]; const hot = bs.filter(x => x.querySelector('.sub.hot')); if (bs.length) pick(hot.length && Math.random() < .7 ? hot : bs).click(); }, 0);
   });
 }
 function moreHint(){
@@ -1026,7 +1074,7 @@ function card(html, ms = 2200){
 function gain(k, v){
   let add = v;
   if (v > 0){
-    const cur = S.stats[k], x = v * Math.pow(1 - Math.min(cur, 99) / 100, 2) + (S.sfrac[k] || 0);
+    const cur = S.stats[k], x = v * PACE * Math.pow(1 - Math.min(cur, 99) / 100, 2) + (S.sfrac[k] || 0);
     add = Math.floor(x); S.sfrac[k] = x - add;
     if (cur < 20) add = Math.max(add, 1);
   }
@@ -1035,7 +1083,7 @@ function gain(k, v){
   SND.sfx('gain'); return add;
 }
 // 好感：越親近，越需要時間；日常相處每人每天最多 +3（事件與節慶不受此限）
-const AFF_DAY = 3;
+const AFF_DAY = 6, PACE = 2;   // 學年縮短後，日常成長加倍
 const evTotal = () => C.reduce((a, c) => a + (EV[c.id] ? EV[c.id].length : 0), 0);
 function aff(id, v, daily){
   if (v > 0 && S.house && BY[id] && BY[id].h === S.house && hasFx('bond')) v = Math.ceil(v * 1.2);
@@ -1043,6 +1091,7 @@ function aff(id, v, daily){
   if (v > 0){
     v = Math.max(1, Math.round(v * Math.max(.12, 1 - before / 215)));
     if (daily){
+      v *= PACE;
       const t = S.affDay[id] && S.affDay[id][0] === S.day ? S.affDay[id][1] : 0;
       v = Math.min(v, AFF_DAY + (hasFx('echo') ? 1 : 0) - t); if (v <= 0) return 0;
       S.affDay[id] = [S.day, t + v];
@@ -1058,7 +1107,7 @@ function aff(id, v, daily){
 function note(t){ S.log.unshift({d:S.day, t:fmt(t)}); if (S.log.length > 80) S.log.pop(); }
 function setQuest(n){ S.quest = n; hud(); E.quest.classList.remove('flash'); void E.quest.offsetWidth; E.quest.classList.add('flash'); toast('主線更新・無名花影', true); }
 
-const cfmt = (t, ctx) => String(t).replace(/\{m\}/g, S.mentee && S.mentee.n ? S.mentee.n : '學弟妹').replace(/\{g\}/g, ctx.c ? ctx.c.n : '').replace(/\{place\}/g, ctx.place || '');
+const cfmt = (t, ctx) => String(tr(t)).replace(/\{m\}/g, S.mentee && S.mentee.n ? S.mentee.n : W('學弟妹', '後輩')).replace(/\{g\}/g, ctx.c ? ctx.c.n : '').replace(/\{place\}/g, ctx.place || '');
 async function run(seq, ctx = {}){
   for (const st of seq){
     const op = st[0];
@@ -1131,10 +1180,12 @@ function lifeGoal(){
   const g = [], dm = domOf(S.day);
   if (S.flags.ch2 && !S.flags.ch3) g.push(`<img class="qi" src="img/key_fei.webp" alt="">四院花鑰在沉睡・二年級的第一個新月會醒來`);
   if (S.flags.ch3done && !S.q4 && !S.flags.ch4done) g.push(`<img class="qi" src="img/crest_yu.webp" alt="">鏡中之門打開了・白溯光在花月湖等你`);
-  if (dm < 14) g.push(`<img class="qi" src="${festImg(S.day)}" alt="">再過 ${14 - dm} 日就是「${festName(S.day)}」`);
-  else if (dm < 25) g.push(mInYear(S.day) === 10 ? `再過 ${25 - dm} 日是期末大考` : `再過 ${25 - dm} 日是本月月考`);
-  else if (mInYear(S.day) === 10 && dm < 28) g.push(yearOf(S.day) === 3 && !S.flags.graduated ? `再過 ${28 - dm} 日是畢業典禮` : `再過 ${28 - dm} 日是年終祭・${cn(yearOf(S.day))}年級就要結束了`);
-  else g.push(`<img class="qi" src="${festImg(S.day + 28)}" alt="">下個月的節慶是「${festName(S.day + 28)}」`);
+  const lastM = mInYear(S.day) === MONTHS;
+  if (dm < EXAM_DOM) g.push(lastM ? `再過 ${EXAM_DOM - dm} 日是期末大考` : `再過 ${EXAM_DOM - dm} 日是本月月考`);
+  else if (lastM && dm < MLEN) g.push(yearOf(S.day) === 3 && !S.flags.graduated ? `再過 ${MLEN - dm} 日是畢業典禮` : `再過 ${MLEN - dm} 日是年終祭・${cn(yearOf(S.day))}年級就要結束了`);
+  else if (!lastM && dm < FEST_DOM) g.push(`<img class="qi" src="${festImg(S.day)}" alt="">再過 ${FEST_DOM - dm} 日就是「${festName(S.day)}」`);
+  else if (mInYear(S.day) === MONTHS - 1) g.push('下個月就是年終祭');
+  else if (!lastM) g.push(`<img class="qi" src="${festImg(S.day + MLEN)}" alt="">下個月的節慶是「${festName(S.day + MLEN)}」`);
   const sx = S.house && curSpell(S.house);
   if (sx) g.push(`<img class="qi" src="img/spell_${sx.id}.webp" alt="">術譜：「${sx.n}」熟練 ${S.mag[sx.id] || 0}/${sx.need}`);
   if (S.stall.open){ const nx = TEA.LEVELS[stallLv() + 1]; if (nx) g.push(`茶攤：再 ${nx[0] - S.stall.rep} 名聲升為「${nx[1]}」`); g.push(`配方簿 ${S.known.length}/${TEA.RECIPES.length}`); }
@@ -1148,9 +1199,10 @@ function lifeGoal(){
 // ---------- calendar ----------
 const SLOT_NAME = {yearend:'年終祭',newyear:'開學典禮',opening:'分院',class:'晨課',exam:'月考',outing:'上午・外出',lunch:'午膳',explore:'午後',festival:'花朝節',dinner:'晚膳',free:'自由時間',rest:'夜'};
 const weekday = d => (d - 1) % 7;
-// 曆法：每月 28 日，十個月一學年
-const monthOf = d => Math.ceil(d / 28), domOf = d => (d - 1) % 28 + 1;
-const yearOf = d => Math.floor((monthOf(d) - 1) / 10) + 1, mInYear = d => (monthOf(d) - 1) % 10 + 1;
+// 曆法：每月 14 日（兩星期），八個月一學年；每月十二日月考、十四日節慶，八月十四日年終祭
+const MLEN = 14, MONTHS = 8, EXAM_DOM = 12, FEST_DOM = 14;
+const monthOf = d => Math.ceil(d / MLEN), domOf = d => (d - 1) % MLEN + 1;
+const yearOf = d => Math.floor((monthOf(d) - 1) / MONTHS) + 1, mInYear = d => (monthOf(d) - 1) % MONTHS + 1;
 // 對白變化：同一組句子輪流出現，最近用過的先不重複
 const RECENT = {};
 // 劇情推進後就不再合理的句子：達成條件後從句庫移除
@@ -1161,7 +1213,7 @@ function vary(key, arr){
   const r = RECENT[key] || (RECENT[key] = []), left = arr.filter(x => !r.includes(x)), v = pick(left.length ? left : arr);
   r.push(v); while (r.length > Math.max(1, Math.floor(arr.length * .7))) r.shift(); return v;
 }
-const seasonOf = d => { const m = mInYear(d); return m <= 3 ? '春' : m <= 5 ? '夏' : m <= 8 ? '秋' : '冬'; };
+const seasonOf = d => { const m = mInYear(d); return m <= 2 ? '春' : m <= 4 ? '夏' : m <= 6 ? '秋' : '冬'; };
 function vp(kind){
   const P = VARY.P[kind]; if (!P) return '';
   const extra = [...(P[seasonOf(S.day)] || []), ...(S.wx && P[S.wx] || [])];
@@ -1171,14 +1223,14 @@ function vp(kind){
 const dateLabel = d => monthOf(d) === 1 ? `一年級・第${cn(d)}日` : `${yearOf(d) > 1 ? cn(yearOf(d)) + '年級・' : ''}${cn(mInYear(d))}月${cn(domOf(d))}日`;
 const festName = d => mInYear(d) === 1 ? '花朝節' : LIFE.FESTS[(mInYear(d) - 2) % LIFE.FESTS.length].n;
 const festImg = d => `img/fest_${mInYear(d) === 1 ? 0 : (mInYear(d) - 2) % LIFE.FESTS.length + 1}.webp`;
-const YLEN = 280, isYearEnd = d => mInYear(d) === 10 && domOf(d) === 28, isNewYear = d => d > YLEN && (d - 1) % YLEN === 0;
+const YLEN = MLEN * MONTHS, isYearEnd = d => mInYear(d) === MONTHS && domOf(d) === MLEN, isNewYear = d => d > YLEN && (d - 1) % YLEN === 0;
 function plan(d){
   if (d <= 1) return ['opening','rest'];
-  if (domOf(d) === 14) return ['outing','lunch','festival','rest'];
   if (isYearEnd(d)) return ['class','lunch','yearend','rest'];
+  if (domOf(d) === FEST_DOM) return ['outing','lunch','festival','rest'];
   if (isNewYear(d)) return ['newyear','lunch','explore','dinner','free','rest'];
   const p = [weekday(d) >= 5 ? 'outing' : 'class','lunch','explore','dinner','free','rest'];
-  if (domOf(d) === 25) p[0] = 'exam';
+  if (domOf(d) === EXAM_DOM) p[0] = 'exam';
   return p;
 }
 
@@ -1192,7 +1244,7 @@ async function meetIfNew(c){
 function evState(c){
   const i = S.ev[c.id] || 0, e = EV[c.id][i];
   if (!e || (S.aff[c.id] || 0) < e.need || S.evDay[c.id] === S.day) return null;
-  if (i >= 4 && S.evDay[c.id] && S.day - S.evDay[c.id] < 7) return null;
+  if (i >= 4 && S.evDay[c.id] && S.day - S.evDay[c.id] < 3) return null;
   if (e.stat && S.stats[e.stat[0]] < e.stat[1]) return {e, i, locked:true};
   return {e, i};
 }
@@ -1519,7 +1571,7 @@ async function runStall(night){
   }
   const res = await serve(night);
   S.money += res.money; S.stall.earned += res.money; S.stall.sessions++;
-  const lv0 = stallLv(); if (festBoost) res.rep *= 2; S.stall.rep += res.rep; const lv1 = stallLv();
+  const lv0 = stallLv(); if (festBoost) res.rep *= 2; res.rep *= PACE; S.stall.rep += res.rep; const lv1 = stallLv();
   gain('feng', 1); gain('qiao', 1); hud();
   await card(`<span class="big">收攤</span><span class="small">${night ? '夜市' : '百靈市集'}・${stallTitle()}</span>
     <div class="sum">招待客人：<b>${res.served} / ${res.total}</b><br>收入：<b>${res.money} 靈石</b>（小費 ${res.tips}）<br>名聲：<b>+${res.rep}</b>（共 ${S.stall.rep}）${res.fans.length ? `<br>熟客：<b>${res.fans.join('、')}</b>` : ''}<br>剩下的茶：<b>${cupCount()} 杯</b>（可以在午膳送人）</div>`, 0);
@@ -1603,7 +1655,7 @@ async function giftMenu(c){
   if (!g) return;
   if (g.startsWith('gift:')){
     const gf = GIFT[g.slice(5)]; S.items[gf.id]--;
-    if (gf.for === c.id && (isBday(c) || !(S.giftDay[c.id] && S.day - S.giftDay[c.id] < 7))){ S.giftDay[c.id] = S.day; S.col.gift[gf.id] = 1; aff(c.id, (isBday(c) ? 22 : 12) + (hasFx('kin') ? 3 : 0)); await say(c.id, gf.line, 'happy'); note(`送給${c.n}「${gf.n}」。`); }
+    if (gf.for === c.id && (isBday(c) || !(S.giftDay[c.id] && S.day - S.giftDay[c.id] < 4))){ S.giftDay[c.id] = S.day; S.col.gift[gf.id] = 1; aff(c.id, (isBday(c) ? 22 : 12) + (hasFx('kin') ? 3 : 0)); await say(c.id, gf.line, 'happy'); note(`送給${c.n}「${gf.n}」。`); }
     else if (gf.for === c.id){ aff(c.id, 3, true); await say(c.id, '又送我？……謝謝。不過，不用每次都這麼破費。', 'shy'); }
     else if (isBday(c)){ aff(c.id, 8); await say(c.id, '生日禮物？……謝謝你記得。', 'happy'); }
     else { aff(c.id, 3, true); await say(c.id, '……送我的？謝謝你。'); }
@@ -1640,7 +1692,7 @@ async function practise(key, pts){
     await tip('spell');
     await say('npc:講師', '咒語不是背出來的。練得夠熟、底子也夠厚，它自然會回應你。');
   }
-  const m = S.mag[x.id] = Math.min(x.need, (S.mag[x.id] || 0) + pts);
+  const m = S.mag[x.id] = Math.min(x.need, (S.mag[x.id] || 0) + pts * PACE);
   if (m < x.need) return toast(`「${x.n}」熟練 ${m} / ${x.need}`);
   if (!spellReady(x)) return toast(`「${x.n}」已練熟，${STATS[spellStat(x)][0]}還差 ${x.req - S.stats[spellStat(x)]} 才能施展`);
   await learnSpell(x);
@@ -1793,7 +1845,7 @@ const KEYPLACE = {arena:'fei', star:'yuan', herb:'ling', vine:'zi'};
 const PLACE_OF_KEY = {fei:'arena', yuan:'star', ling:'herb', zi:'vine'};
 const keyGuide = h => C.filter(c => c.h === h && S.met[c.id]).sort((a, b) => (S.aff[b.id] || 0) - (S.aff[a.id] || 0))[0];
 // 主線節奏：第三章在二年級、第四章在三年級；花鑰每把相隔約兩個月才醒
-const CH3_FROM = 284, CH4_FROM = 566, KEY_GAP = 49;
+const CH3_FROM = 114, CH4_FROM = 226, KEY_GAP = 21;
 const nextKeyDay = () => { const n = KEY_HOUSES.filter(h => S.keys[h]).length; return n ? (S.keyDay || 0) + KEY_GAP : CH3_FROM; };
 function keyNeeds(h){
   const g = keyGuide(h), needs = [], nk = S.keyPace === 'new' ? nextKeyDay() : 0;
@@ -1853,8 +1905,8 @@ function q4Goal(){
 }
 function spawnBlight(){
   if (!blightOn()) { S.blight = null; return; }
-  if (S.blight && S.day - S.blight.d >= 3){ const p = S.blight.p; S.blight = null; S.blightGone = p; }
-  if (!S.blight && Math.random() < .55){
+  if (S.blight && S.day - S.blight.d >= 4){ const p = S.blight.p; S.blight = null; S.blightGone = p; }
+  if (!S.blight && Math.random() < .75){
     const ps = BLIGHT_PLACES.filter(x => x !== S.blightLast);
     S.blight = {p: pick(ps), d: S.day}; S.blightLast = S.blight.p;
   }
@@ -1940,7 +1992,7 @@ function spawnComm(){
   if (keep.length < S.comm.length) S.commLate = true;
   S.comm = keep;
   if (S.comm.length >= 2 || Math.random() > .4) return;
-  const pool = POST.COMM.map((c, i) => i).filter(i => !S.comm.some(a => a.i === i) && !(S.commLast[i] && S.day - S.commLast[i] < 20)
+  const pool = POST.COMM.map((c, i) => i).filter(i => !S.comm.some(a => a.i === i) && !(S.commLast[i] && S.day - S.commLast[i] < 8)
     && (POST.COMM[i].who.startsWith('npc:') || S.met[POST.COMM[i].who]));
   if (!pool.length) return;
   const i = pick(pool);
@@ -1969,7 +2021,7 @@ async function board(){
     S.cups[g]--;
     if (!c.want.includes(g)){ await say('', `你把${REC[g].n}放在委託板旁。過了一會兒，紙條上多了一行小字：「謝謝，不過……好像不是我想要的那種。」`); gain('qiao', 1); continue; }
     S.comm.splice(k, 1); S.commLast[a.i] = S.day; S.commDone++; S.col.comm[a.i] = 1;
-    const pay = REC[g].price * 3; S.money += pay; S.stall.rep += 4; gain('qiao', 1); gain('gan', 1); hud(); SND.sfx('gain');
+    const pay = REC[g].price * 3; S.money += pay; S.stall.rep += 4 * PACE; gain('qiao', 1); gain('gan', 1); hud(); SND.sfx('gain');
     if (BY[c.who]){ show(BY[c.who]); await say(c.who, c.thanks, 'happy'); aff(c.who, 8); show(null); }
     else await say(c.who, c.thanks);
     toast(`委託完成・靈石 +${pay}・名聲 +4`, true);
@@ -2004,11 +2056,11 @@ async function anniversary(){
   for (const [id, r] of Object.entries(S.rel)){
     if (r !== 'love' || !BY[id]) continue;
     const n = S.day - (S.relDay[id] || S.day);
-    if (n > 0 && n % 100 === 0){ toast(BOND.ANNI.replace('{c}', BY[id].n), true); aff(id, 6); note(`和${BY[id].n}在一起${cn(n / 100)}百天。`); }
+    if (n > 0 && n % 50 === 0){ toast(BOND.ANNI.replace('{c}', BY[id].n).replace('{d}', n), true); aff(id, 6); note(`和${BY[id].n}在一起滿 ${n} 天。`); }
   }
 }
 async function letterNight(){
-  if (S.day - S.letterLast < 9 || Math.random() > .35) return;
+  if (S.day - S.letterLast < 4 || Math.random() > .35) return;
   const who = C.filter(c => BOND.REL[c.id] && (S.rel[c.id] || (S.ev[c.id] || 0) >= 4) && S.letters.filter(l => l.id === c.id).length < BOND.REL[c.id].letters.length);
   if (!who.length) return;
   const w = who.sort((a, b) => (S.rel[b.id] ? 1 : 0) - (S.rel[a.id] ? 1 : 0) || Math.random() - .5)[0], R = BOND.REL[w.id];
@@ -2033,7 +2085,7 @@ function pairHere(pid){
   for (const [k, P] of Object.entries(BOND.PAIRS)){
     const [a, b] = k.split('|'), n = S.pairs[k] || 0;
     if (P.at !== pid || !here.includes(a) || !here.includes(b) || n >= P.s.length) continue;
-    if (n && S.day - (S.pairDay[k] || 0) < 30) continue;
+    if (n && S.day - (S.pairDay[k] || 0) < 12) continue;
     if ((S.aff[a] || 0) < 30 || (S.aff[b] || 0) < 30) continue;
     if (!S.flags.ch3done && JSON.stringify(P.s).includes('長庚')) continue;
     return k;
@@ -2134,7 +2186,7 @@ function yearsList(){
 async function yearend(){
   const y = yearOf(S.day);
   setScene('年終祭'); await sleep(300);
-  await card(`<img class="festimg" src="img/fest_0.webp" alt=""><span class="small">${cn(y)}年級・十月二十八日</span><span class="big">年終祭</span>`, 2400);
+  await card(`<img class="festimg" src="img/fest_0.webp" alt=""><span class="small">${cn(y)}年級・八月十四日</span><span class="big">年終祭</span>`, 2400);
   await tip('year');
   for (const t of YEAR.FEST_IN) await say('', t);
   const ok = C.filter(c => S.met[c.id] && (S.aff[c.id] || 0) >= 40).sort((a, b) => (S.aff[b.id] || 0) - (S.aff[a.id] || 0)).slice(0, 5);
@@ -2188,8 +2240,8 @@ async function newyear(){
   }
   gain(HOUSES[S.house].stat, 2);
 }
-const menteeDue = () => S.mentee && S.mentee.y === yearOf(S.day) && S.mentee.step < YEAR.MEV.length && S.day - S.mentee.last >= 40 + (S.mentee.step === YEAR.MEV.length - 1 ? 0 : 0)
-  && (S.mentee.step < YEAR.MEV.length - 1 || mInYear(S.day) >= 9);
+const menteeDue = () => S.mentee && S.mentee.y === yearOf(S.day) && S.mentee.step < YEAR.MEV.length && S.day - S.mentee.last >= 16 + (S.mentee.step === YEAR.MEV.length - 1 ? 0 : 0)
+  && (S.mentee.step < YEAR.MEV.length - 1 || mInYear(S.day) >= 7);
 async function menteeEvent(){
   const mt = S.mentee, e = YEAR.MEV[mt.step], f = t => t.replace(/\{m\}/g, mt.n);
   for (const [w, t] of e.seq) await say(f(w), f(t));
@@ -2280,7 +2332,7 @@ async function cls(){
 async function exam(){
   setScene('課室'); await sleep(300);
   const m = monthOf(S.day), n = 7 + Math.min(2, Math.floor((m - 1) / 2)), dc = 2 + Math.min(3, m - 1), secs = 11 + (n - 7);
-  const fin = mInYear(S.day) === 10, title = fin ? '期末大考' : m === 1 ? '月考' : `第${cn(m)}次月考`;
+  const fin = mInYear(S.day) === MONTHS, title = fin ? '期末大考' : m === 1 ? '月考' : `第${cn(m)}次月考`;
   if (fin){ setScene('花朝正殿'); for (const t of YEAR.FINAL) await say('', t); }
   else await say('', m === 1 ? '今天是入學後的第一次月考。四院的新生坐滿了課室，連呼吸聲都聽得見。' : `第${cn(m)}次月考。考題一次比一次難，課室裡還是安靜得聽得見呼吸聲。`);
   await say('npc:監考講師', `${cn(n)}片花瓣，${cn(secs)}息之內，依次點亮。碰到灰色的，算錯。開始。`);
@@ -2494,13 +2546,13 @@ async function storyBeat(d, slot){
     else if (S.q4 === 6 && slot === 'rest' && d >= S.q4Day + 2 && !ch4Needs().length){ await run(CH4.finale); await ch4End(); }
     else if (S.flags.ch4done && !S.flags.yulanOpen && slot === 'class' && d >= (S.ch4Day || 0) + 1){ await run(POST.open); S.flags.yulanOpen = true; syncPost(); hud(); }
     if (S.q2 === 0 && d >= 31 && slot === 'rest') await run(CH2.open);
-    else if (S.q2 === 1 && d >= 38 && slot === 'rest') await run([['#scene','宿舍・夜'],['','夜裡，你又夢見了那面鏡子。醒過來時，你已經披著外衣，站在紫藤迴廊了。'], ...CH2.vine]);
-    else if (S.q2 === 2 && d >= 45 && slot === 'rest') await run([['#scene','宿舍・夜'],['','窗邊落下一隻紙鶴。'],['npc:紙鶴','「星圖有變。今夜，觀星閣。——江望舒」'], ...CH2.star]);
-    else if (S.q2 === 3 && d >= 50 && slot === 'class') await run(CH2.letter);
-    else if (S.q2 === 4 && d >= 62 && slot === 'rest') await run([['#scene','宿舍・夜'],['','有人敲門。門外是陸觀瀾，懷裡抱著一卷封著火漆的公文。'],['lu','跟我來。這件事，不能再等了。'], ...CH2.lib]);
-    else if (S.q2 === 5 && d >= 72 && slot === 'rest'){ await run(CH2.lake); await ch2End(); }
+    else if (S.q2 === 1 && d >= 34 && slot === 'rest') await run([['#scene','宿舍・夜'],['','夜裡，你又夢見了那面鏡子。醒過來時，你已經披著外衣，站在紫藤迴廊了。'], ...CH2.vine]);
+    else if (S.q2 === 2 && d >= 37 && slot === 'rest') await run([['#scene','宿舍・夜'],['','窗邊落下一隻紙鶴。'],['npc:紙鶴','「星圖有變。今夜，觀星閣。——江望舒」'], ...CH2.star]);
+    else if (S.q2 === 3 && d >= 40 && slot === 'class') await run(CH2.letter);
+    else if (S.q2 === 4 && d >= 44 && slot === 'rest') await run([['#scene','宿舍・夜'],['','有人敲門。門外是陸觀瀾，懷裡抱著一卷封著火漆的公文。'],['lu','跟我來。這件事，不能再等了。'], ...CH2.lib]);
+    else if (S.q2 === 5 && d >= 49 && slot === 'rest'){ await run(CH2.lake); await ch2End(); }
   }
-  if (slot === 'rest' && S.parcelPending && d >= S.parcel + 5) await grannyReply();
+  if (slot === 'rest' && S.parcelPending && d >= S.parcel + 3) await grannyReply();
   if (slot === 'rest'){
     if (d >= 3 && d < 12 && S.quest === 0) await run(MAIN.starForced);
     if (d === 12 && S.quest === 1) await run(MAIN.lakeForced);
@@ -2513,7 +2565,7 @@ const SLOTS = {opening, class:cls, exam, outing:() => explore(vp('outing')), lun
 
 async function dayCard(d){
   const m = monthOf(d), dm = domOf(d);
-  const sp = dm === 14 ? `<span class="seal">${m === 1 ? '花朝' : '節慶'}</span>` : dm === 25 ? '<span class="seal">月考</span>' : '';
+  const sp = dm === 14 ? `<span class="seal">${m === 1 ? '花朝' : '節慶'}</span>` : dm === EXAM_DOM ? '<span class="seal">月考</span>' : '';
   if (m > 1 && dm === 1) await card(`<span class="small">${cn(yearOf(d))}年級</span><span class="big">${cn(mInYear(d))}月</span><span class="small">新的一個月開始了</span>`, 2000);
   const wx = S.wx && d > 1 ? `・${WX[S.wx].n}` : '', wxi = S.wx && d > 1 ? `<img class="wximg" src="img/wx_${S.wx}.webp" alt="">` : '';
   if (m === 1) await card(`${wxi}<span class="big">第${cn(d)}日</span><span class="small">一年級・週${WEEK[(d - 1) % 7]}${wx}</span>${sp}`, 1900);
@@ -2648,9 +2700,9 @@ function bindClose(){
 const SLOT_LABEL = {yearend:'年終祭',newyear:'開學典禮',opening:'分院',class:'晨課',exam:'月考',outing:'上午',lunch:'午膳',explore:'午後',festival:'花朝節',dinner:'晚膳',free:'自由時間',rest:'夜'};
 function describe(v){
   if (!v) return '';
-  const P = plan(v.day), k = P[Math.min(v.slot, P.length - 1)];
+  const old = v.cal !== 2 && (v.day || 0) > 28, day = old ? calConv(v.day) : v.day, P = plan(day), k = P[old ? 0 : Math.min(v.slot, P.length - 1)];
   const top = C.filter(c => v.met && v.met[c.id]).sort((a, b) => (v.aff[b.id] || 0) - (v.aff[a.id] || 0))[0];
-  const where = v.day ? `${monthOf(v.day) === 1 ? `第${cn(v.day)}日` : dateLabel(v.day)}・${k === 'festival' ? festName(v.day) : SLOT_LABEL[k] || ''}` : '序章';
+  const where = day ? `${monthOf(day) === 1 ? `第${cn(day)}日` : dateLabel(day)}・${k === 'festival' ? festName(day) : SLOT_LABEL[k] || ''}` : '序章';
   return `${v.name}・${v.house ? HOUSES[v.house].name : '未分院'}・${where}${top ? `・最親近：${top.n}` : ''}`;
 }
 const when = t => { if (!t) return ''; const d = new Date(t), p = n => String(n).padStart(2, '0'); return `${d.getMonth() + 1}月${d.getDate()}日 ${p(d.getHours())}:${p(d.getMinutes())} 存檔`; };
@@ -2673,7 +2725,7 @@ function restoreCode(txt){
 }
 function backupNag(){
   if (FAST || !S.house || S.day < 14) return;
-  if (S.day - (S.expDay || 0) >= 28 && S.day - (S.expNag || 0) >= 7){ S.expNag = S.day; setTimeout(() => toast('提示：存檔只在這部手機上。可到「存」→「匯出存檔碼」備份一下。'), 2600); }
+  if (S.day - (S.expDay || 0) >= 14 && S.day - (S.expNag || 0) >= 7){ S.expNag = S.day; setTimeout(() => toast('提示：存檔只在這部手機上。可到「存」→「匯出存檔碼」備份一下。'), 2600); }
 }
 const CAN_FILE = /github\.io$/.test(location.hostname) || location.protocol === 'file:';
 function markExport(){ if (S && S.day){ S.expDay = S.day; S.expNag = S.day; } }
@@ -2711,6 +2763,7 @@ function saveSheet(){
     <input type="file" id="savefile" accept=".txt,text/plain" hidden>
     <div id="codearea"></div></div>
     <div class="codebox prefs"><h3>設定</h3>
+      <div class="pref" ${JA_ON ? '' : 'hidden'}><span>語言</span><div class="seg2"><button type="button" data-act="lang" data-k="zh" class="${LANG === 'zh' ? 'on' : ''}" translate="no">繁中</button><button type="button" data-act="lang" data-k="ja" class="${LANG === 'ja' ? 'on' : ''}" translate="no">日本語</button></div></div>
       <div class="pref"><span>文字速度</span><div class="seg2">${Object.entries(SPEEDS).map(([k, [, n]]) => `<button type="button" data-act="speed" data-k="${k}" class="${PREF.speed === k ? 'on' : ''}">${n}</button>`).join('')}</div></div>
       <div class="pref"><span>對白回顧<small>查看最近說過的話和你的選擇</small></span><button type="button" class="tog" data-act="backlog">打開</button></div>
       <div class="pref"><span>略過已讀<small>讀過的對白快速帶過，遇到新對白或選項就停下</small></span><button type="button" class="tog ${PREF.skip ? 'on' : ''}" data-act="skip">${PREF.skip ? '開' : '關'}</button></div>
@@ -2732,6 +2785,7 @@ function arm(b, text){
 function saveAct(b){
   const act = b.dataset.act, k = b.dataset.k, key = k === 'auto' ? KEY : slotKey(k);
   if (act === 'update'){ if (window.checkUpdate) window.checkUpdate(true); return; }
+  if (act === 'lang'){ if (k !== LANG) setLang(k); return; }
   if (act === 'speed'){ PREF.speed = k; savePref(); SND.sfx('tap'); saveSheet(); return; }
   if (act === 'backlog'){ backlog(); return; }
   if (act === 'skip'){ setSkip(!PREF.skip, true); saveSheet(); return; }
@@ -2798,8 +2852,15 @@ sndBtn.onclick = () => sndBtn.setAttribute('aria-pressed', SND.toggle());
 })();
 
 // ---------- 小支線 ----------
-const ARC_IF = {rain:() => S.wx === 'rain', stall:() => S.stall.open, m8:() => mInYear(S.day) === 8 && domOf(S.day) <= 12,
-  m8late:() => mInYear(S.day) > 8 || (mInYear(S.day) === 8 && domOf(S.day) >= 20), late:() => domOf(S.day) >= 26, m9:() => mInYear(S.day) === 9 && domOf(S.day) <= 12, y3m9:() => mInYear(S.day) === 9 && yearOf(S.day) === 3 && domOf(S.day) <= 12, m9late:() => mInYear(S.day) > 9 || (mInYear(S.day) === 9 && domOf(S.day) >= 20), mentee:() => !!(S.mentee && S.mentee.n), m10:() => mInYear(S.day) === 10 && yearOf(S.day) === 3 && domOf(S.day) <= 18, m10late:() => mInYear(S.day) === 10 && yearOf(S.day) === 3 && domOf(S.day) >= 18 && domOf(S.day) <= 27, ch4done:() => !!S.flags.ch4done, m10m:() => mInYear(S.day) === 10 && yearOf(S.day) === 3 && domOf(S.day) <= 18 && !!(S.mentee && S.mentee.n), baiFree:() => !!S.flags.baiFree, fest:() => domOf(S.day) === 14, noch4:() => !S.q4 && !S.flags.ch4done};
+const ARC_IF = {rain:() => S.wx === 'rain', stall:() => S.stall.open, mentee:() => !!(S.mentee && S.mentee.n), ch4done:() => !!S.flags.ch4done, baiFree:() => !!S.flags.baiFree, noch4:() => !S.q4 && !S.flags.ch4done,
+  fest:() => domOf(S.day) === FEST_DOM, late:() => domOf(S.day) >= EXAM_DOM + 1,
+  // 試煉大會：六月第一週報名、六月十三日比賽；擺攤比賽：七月第一週報名、七月十三日比賽
+  m8:() => mInYear(S.day) === 6 && domOf(S.day) <= 7, m8late:() => mInYear(S.day) > 6 || (mInYear(S.day) === 6 && domOf(S.day) >= 13),
+  m9:() => mInYear(S.day) === 7 && domOf(S.day) <= 7, m9late:() => mInYear(S.day) > 7 || (mInYear(S.day) === 7 && domOf(S.day) >= 13),
+  // 三年級：七月上旬採風；八月（畢業月）學弟妹的禮物與最後的約定
+  y3m9:() => yearOf(S.day) === 3 && mInYear(S.day) === 7 && domOf(S.day) <= 7,
+  m10:() => yearOf(S.day) === 3 && mInYear(S.day) === 8 && domOf(S.day) <= 8, m10m:() => yearOf(S.day) === 3 && mInYear(S.day) === 8 && domOf(S.day) <= 8 && !!(S.mentee && S.mentee.n),
+  m10late:() => yearOf(S.day) === 3 && mInYear(S.day) === 8 && domOf(S.day) >= 8 && domOf(S.day) <= 13};
 async function arcPartner(prompt, ctx){
   const pool = C.filter(c => S.met[c.id] && (S.aff[c.id] || 0) >= 30 && (c.id !== 'bai' || S.flags.baiFree)).sort((a, b) => (S.aff[b.id] || 0) - (S.aff[a.id] || 0)).slice(0, 5);
   const v = await choose(prompt, [...pool.map(c => charOpt(c)), {label:'一個人參加', value:''}]);
@@ -2884,8 +2945,10 @@ async function loop(){
     S.day++; S.slot = 0;
   }
 }
+const LANG_OPT = () => ({label: LANG === 'ja' ? '繁體中文' : '日本語', sub: LANG === 'ja' ? '語言・言語' : '言語を日本語に切り替え', value:'lang', noT:true});
+function setLang(to){ PREF.lang = to || (LANG === 'ja' ? 'zh' : 'ja'); savePref(); if (S && S.house) store(BOOT, JSON.stringify(S)); location.reload(); }
 async function main(){
-  if (FAST && window.__PRESET){ S = migrate(Object.assign(fresh(), JSON.parse(JSON.stringify(window.__PRESET)))); hud(); loop(); return; }
+  if (FAST && window.__PRESET){ S = migrate(Object.assign(fresh(), {cal:undefined}, JSON.parse(JSON.stringify(window.__PRESET)))); hud(); loop(); return; }
   const boot = readRaw(BOOT);
   if (boot){
     store(BOOT, null);
@@ -2897,9 +2960,10 @@ async function main(){
   while (auto || manual){
     const opts = [];
     if (auto) opts.push({label:'繼續', sub: describe(auto).replace(/^[^・]+・/, ''), value:'go'});
-    opts.push({label:'讀取存檔', value:'load'}, {label:'新的入學', value:'new'});
+    opts.push({label:'讀取存檔', value:'load'}, {label:'新的入學', value:'new'}, ...(JA_ON ? [LANG_OPT()] : []));
     const v = await choose(auto ? `歡迎回來，${auto.name}。` : '歡迎回來。', opts);
     if (v === 'go'){ S = migrate(auto); hud(); break; }
+    if (v === 'lang'){ setLang(); return; }
     if (v === 'load'){ CK = null; saveSheet(); await new Promise(r => onSheetClose = r); continue; }
     if (auto){
       const ok = await choose('開始新的入學後，自動存檔會被新進度取代。手動存檔會保留。', [{label:'開始新的入學', value:1},{label:'返回', value:0}]);
@@ -2910,8 +2974,9 @@ async function main(){
   if (!auto && !manual && !FAST){
     // 新裝置：可以直接貼上舊裝置的存檔碼
     while (true){
-      const v = await choose('花朝靈院', [{label:'開始入學', value:'new'}, {label:'從舊裝置繼續', sub:'貼上存檔碼或選擇存檔檔案', value:'code'}]);
+      const v = await choose('花朝靈院', [{label:'開始入學', value:'new'}, {label:'從舊裝置繼續', sub:'貼上存檔碼或選擇存檔檔案', value:'code'}, ...(JA_ON ? [LANG_OPT()] : [])]);
       if (v === 'new') break;
+      if (v === 'lang'){ setLang(); return; }
       CK = null; saveSheet(); E.sheet.querySelector('[data-act="import"]').click(); E.sheet.querySelector('.codebox').scrollIntoView({block:'start'});
       await new Promise(r => onSheetClose = r);
     }
@@ -2931,7 +2996,7 @@ document.addEventListener('pointerdown', e => {
 }, true);
 window.__S = () => S;
 if (FAST) window.__D = () => ({C:C.map(c => c.id), lake:presentAt('lake').map(c => c.id), where:whereIs(BY.bai), ready:ready(BY.bai), ev:evState(BY.bai)});
-if (location.hash === '#shot') window.__T = {graduation:() => graduation(), legacy:() => legacy(), pact:c => pactMoment(BY[c]), letter:() => { S.letterLast = -99; return letterNight(); }, pair:(k, p) => { useHp(2); return pairScene(k, PLACES.find(x => x.id === p)); }, yearend:() => yearend(), newyear:() => newyear(), menteeEvent:() => menteeEvent(), yulan:() => yulan(), board:() => board(), market:() => market(), setS:o => { S = migrate(o); hud(); }, arcAt, fmt, keyNeeds, setScene, hud, runStall, market, openTab, learnSpell, SPELL, serve, teaSheet, monthFest, dayCard, incident, run, opening, explore, free, practise, playGame, applyWx, keyTrial, assets, goodsShop, giftMenu: c => giftMenu(c)};
+if (location.hash === '#shot') window.__T = {calConv, migrate, fresh, dateLabel, describe, plan, seasonOf, lifeGoal, graduation:() => graduation(), legacy:() => legacy(), pact:c => pactMoment(BY[c]), letter:() => { S.letterLast = -99; return letterNight(); }, pair:(k, p) => { useHp(2); return pairScene(k, PLACES.find(x => x.id === p)); }, yearend:() => yearend(), newyear:() => newyear(), menteeEvent:() => menteeEvent(), yulan:() => yulan(), board:() => board(), market:() => market(), setS:o => { S = migrate(o); hud(); }, arcAt, fmt, keyNeeds, setScene, hud, runStall, market, openTab, learnSpell, SPELL, serve, teaSheet, monthFest, dayCard, incident, run, opening, explore, free, practise, playGame, applyWx, keyTrial, assets, goodsShop, giftMenu: c => giftMenu(c)};
 // ---------- loading screen ----------
 const imgURL = k => k.includes('/') ? k : `img/${k}.jpg`;
 function assets(){
