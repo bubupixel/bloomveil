@@ -17,7 +17,7 @@ body{touch-action:manipulation;overscroll-behavior:none}
   padding:9px 18px;font:15px "LXGW WenKai TC","Kaiti TC",serif;letter-spacing:.12em;color:#fbf2df;cursor:pointer;
   background:rgba(22,15,11,.92);border:1px solid #ecd7a2;border-radius:999px;box-shadow:0 6px 20px rgba(0,0,0,.45);white-space:nowrap}
 </style>
-<script>window.GAME_VERSION = '20261117-230118';</script>
+<script>window.GAME_VERSION = '20261117-232440';</script>
 <title>花朝靈院</title>
 <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png">
@@ -592,10 +592,10 @@ html.lowfx .item.in{animation:itemIn 1.2s ease-out forwards}
 // 日文版仍在製作：網址加上 &ja 才會開啟語言切換
 window.JA_ON = true;
 window.LANG = (() => { try { return JA_ON && JSON.parse(localStorage.getItem('huachao-pref') || '{}').lang === 'ja' ? 'ja' : 'zh'; } catch (e) { return 'zh'; } })();
-if (LANG === 'ja'){ document.documentElement.lang = 'ja'; document.write('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap"><script src="story_ja.js?v=20261117-230118"><\/script>'); }
+if (LANG === 'ja'){ document.documentElement.lang = 'ja'; document.write('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap"><script src="story_ja.js?v=20261117-232440"><\/script>'); }
 </script>
-<script src="audio.js?v=20261117-230118"></script>
-<script src="story.js?v=20261117-230118"></script>
+<script src="audio.js?v=20261117-232440"></script>
+<script src="story.js?v=20261117-232440"></script>
 <script>
 (() => {
 const {ARCS,ARC_LINES,VARY2,FACE_TAGS,TUT,VARY,END,BOND,YEAR,POST,QUESTS4,CH4,TIPS:GUIDE,CH3,BAIC,EV_BAI,GOODS,SORT,QUESTS2,CH2,LIFE2,LIFE,MAGIC,TEA,HOUSES,STATS,STAT_ORDER,C:C12,BAI,GRAN,FACES,EV,QUESTS,MAIN,PROLOGUE,PLACES,LOOK,FREE,CLASS_TEXT,SCENE_IMG,SCENE_FALLBACK,CG} = window.STORY;
@@ -1191,7 +1191,7 @@ async function run(seq, ctx = {}){
           break;
         }
       }
-    } else await say(op === 'G' && ctx.c ? ctx.c.id : op, cfmt(st[1], ctx), st[2]);
+    } else { const ag = op === 'G' && ctx.c && BOND.ARCG[st[1]]; await say(op === 'G' && ctx.c ? ctx.c.id : op, cfmt(ag && ag[ctx.c.id] || st[1], ctx), st[2]); }
   }
 }
 
@@ -1297,7 +1297,7 @@ async function meet(c, ctx, where){
   const was = S.met[c.id];
   show(c);
   await meetIfNew(c);
-  if (was && S.broken === c.id){ S.broken = null; await say(c.id, pick(LIFE2.BROKEN), 'sad'); }
+  if (was && S.broken === c.id){ S.broken = null; await say(c.id, pick((BOND.VOICE[c.id] || {}).broken || LIFE2.BROKEN), 'sad'); }
   if (was) await birthdayMoment(c);
   const st = was && evState(c);
   if (st && !st.locked){
@@ -1328,7 +1328,7 @@ async function meet(c, ctx, where){
     if (!FAST || Math.random() < .3){
       await tip('promise');
       const pr = await choose(vary('dend', ['晚膳快結束了。','燈籠的火光暗了一點。晚膳快結束了。','湖邊的人漸漸散了。','碗筷都收得差不多了。']), [{label:`約${c.n}明天一起吃午膳`, value:true, icon:'img/life_promise.webp'}, {label:'改天再說', value:false}]);
-      if (pr){ S.promise = {id:c.id, day:S.day + 1}; await say(c.id, vary('prom', VARY2.SCENE.PROMISE)); }
+      if (pr){ S.promise = {id:c.id, day:S.day + 1}; await say(c.id, BOND.VOICE[c.id] ? vary('prom' + c.id, BOND.VOICE[c.id].prom) : vary('prom', VARY2.SCENE.PROMISE)); }
     }
   }
   else if (ctx === 'alt'){ await say('', `${c.n}也在${where}。`); await say(c.id, vary('ln' + c.id, [...c.lunch, ...(VARY.LUNCH[c.id] || [])])); aff(c.id, 4, true); }
@@ -1701,18 +1701,19 @@ async function giftMenu(c){
   opts.push({label:'不送了', value:null});
   const g = await choose(vary('give', ['要送點什麼給{c}嗎？','要不要把東西拿給{c}？','{c}好像注意到你的包袱了。要送點什麼嗎？','要留點什麼給{c}嗎？']).replace('{c}', c.n), opts);
   if (!g) return;
+  const VO = BOND.VOICE[c.id];
   if (g.startsWith('gift:')){
     const gf = GIFT[g.slice(5)]; S.items[gf.id]--;
     if (gf.for === c.id && (isBday(c) || !(S.giftDay[c.id] && S.day - S.giftDay[c.id] < 4))){ S.giftDay[c.id] = S.day; S.col.gift[gf.id] = 1; aff(c.id, (isBday(c) ? 22 : 12) + (hasFx('kin') ? 3 : 0)); await say(c.id, gf.line, 'happy'); note(`送給${c.n}「${gf.n}」。`); }
-    else if (gf.for === c.id){ aff(c.id, 3, true); await say(c.id, '又送我？……謝謝。不過，不用每次都這麼破費。', 'shy'); }
-    else if (isBday(c)){ aff(c.id, 8); await say(c.id, '生日禮物？……謝謝你記得。', 'happy'); }
-    else { aff(c.id, 3, true); await say(c.id, '……送我的？謝謝你。'); }
+    else if (gf.for === c.id){ aff(c.id, 3, true); await say(c.id, VO ? VO.gift2 : '又送我？……謝謝。不過，不用每次都這麼破費。', 'shy'); }
+    else if (isBday(c)){ aff(c.id, 8); await say(c.id, VO ? VO.giftBd : '生日禮物？……謝謝你記得。', 'happy'); }
+    else { aff(c.id, 3, true); await say(c.id, VO ? VO.giftNo : '……送我的？謝謝你。'); }
     return;
   }
-  if (g === 'cake'){ S.cake--; aff(c.id, 8, true); hud(); await say(c.id, vary('cake', VARY.CAKE), 'happy'); return; }
+  if (g === 'cake'){ S.cake--; aff(c.id, 8, true); hud(); await say(c.id, VO ? vary('cake' + c.id, VO.cake) : vary('cake', VARY.CAKE), 'happy'); return; }
   S.cups[g]--;
-  if (REC[g].fans.includes(c.id)){ aff(c.id, 10, true); await say(c.id, vary('fav', VARY.FAV).replace('{t}', REC[g].n), 'happy'); }
-  else { aff(c.id, 4, true); await say(c.id, VARY.TEA[c.id] ? vary('tea' + c.id, [...VARY.TEA[c.id], '是你泡的茶？謝謝，我會慢慢喝。']) : '是你泡的茶？謝謝，我會慢慢喝。'); }
+  if (REC[g].fans.includes(c.id)){ aff(c.id, 10, true); await say(c.id, (VO ? vary('fav' + c.id, VO.fav) : vary('fav', VARY.FAV)).replace('{t}', REC[g].n), 'happy'); }
+  else { aff(c.id, 4, true); await say(c.id, VARY.TEA[c.id] ? vary('tea' + c.id, VARY.TEA[c.id]) : '是你泡的茶？謝謝，我會慢慢喝。'); }
 }
 
 
@@ -1969,14 +1970,17 @@ function keyGoal(){
 async function keyTrial(h){
   const K = CH3.KEYS[h], g = keyGuide(h);
   useHp(2); show(g);
-  await run(K.pre, {c:g});
+  // 引路人專屬台詞：按 'G' 出現次序替換（pre → win → fail）
+  const kv = BOND.KEYV[g.id], nG = q => q.filter(x => x[0] === 'G').length;
+  const sub = (q, off) => { if (!kv) return q; let i = off; return q.map(x => x[0] === 'G' ? ['G', kv[i++] || x[1], x[2]] : x); };
+  await run(sub(K.pre, 0), {c:g});
   const r = await playGame(h, {title:K.game});
   if (r.full || r.score >= 3){
-    await run(K.win, {c:g});
+    await run(sub(K.win, nG(K.pre)), {c:g});
     S.keys[h] = true; S.keyDay = S.day; aff(g.id, 6); gain(HOUSES[h].stat, 2);
     await card(`<img class="crestimg" src="img/key_${h}.webp" alt=""><span class="small">四院花鑰・${cn(KEY_HOUSES.filter(x => S.keys[x]).length)}／四</span><span class="big">${K.n}</span>`, 2600);
     note(`和${g.n}一起，在${K.place}取得了「${K.n}」。`);
-  } else await run(K.fail, {c:g});
+  } else await run(sub(K.fail, nG(K.pre) + nG(K.win)), {c:g});
 }
 async function ch3End(){
   S.flags.ch3done = true; S.flags.baiFree = true; S.flags.baiName = true; S.ch3Day = S.day;
@@ -2148,7 +2152,7 @@ async function pactMoment(c){
   if (!cur) opts.push({label:BOND.ASK.friend, value:'friend'});
   opts.push({label:BOND.ASK.wait, value:'wait'});
   const v = await choose(`${c.n}在等你的回答。`, opts);
-  if (v === 'wait'){ S.relAsk[c.id] = stage - .5; S.relWait[c.id] = S.day; await say(c.id, BOND.WAIT); return true; }
+  if (v === 'wait'){ S.relAsk[c.id] = stage - .5; S.relWait[c.id] = S.day; await say(c.id, (BOND.VOICE[c.id] || {}).wait || BOND.WAIT); return true; }
   S.rel[c.id] = v; S.relDay[c.id] = S.day; SND.sfx('magic');
   await say(c.id, v === 'love' ? R.love : R.friend, 'happy');
   aff(c.id, v === 'love' ? 15 : 10);
@@ -2244,7 +2248,7 @@ async function graduation(){
   const fr = C.filter(c => S.rel[c.id] === 'friend').sort((a, b) => (S.aff[b.id] || 0) - (S.aff[a.id] || 0))[0];
   let relKey, relT, seq, who = null;
   if (lover){ relKey = 'L:' + lover; relT = `${BY[lover].n}・${END.LOVE[lover].t}`; seq = END.LOVE[lover].s; who = BY[lover]; }
-  else if (fr){ relKey = 'F'; relT = `${fr.n}・${END.FRIEND.t}`; seq = END.FRIEND.s.map(([w, t]) => [w === '{c}' ? fr.id : w, t]); who = fr; }
+  else if (fr){ relKey = 'F'; relT = `${fr.n}・${END.FRIEND.t}`; seq = END.FRIEND.s.map(([w, t]) => w === '{c}' ? [fr.id, (BOND.VOICE[fr.id] || {}).friend || t] : [w, t]); who = fr; }
   else { relKey = 'S'; relT = END.SOLO.t; seq = END.SOLO.s; }
   const cg = who && ((lover && CG['cg_end_' + who.id]) || CG['cg_' + who.id]);
   if (cg) setScene('後來', cg); else setScene('花月湖');
@@ -2564,7 +2568,7 @@ async function lunch(){
   const mt = menteeDue() && S.mentee;
   const id = await choose(vp('lunch'), [...(mt ? [{label:`新生・${mt.n}`, sub:'✦ 好像有事想問你', value:'mentee', hot:true, icon:`img/crest_${S.house}.webp`}] : []), ...pool.map(c => c === prom ? {...charOpt(c), sub:'✦ 約好了今天一起吃', hot:true} : charOpt(c)), {label:'一個人安靜吃飯', sub:'風雅 +2', value:null}]);
   if (prom){ S.promise = null;
-    if (id === prom.id){ show(prom); await say(prom.id, pick(LIFE2.KEPT), 'happy'); aff(prom.id, 5); note(`守住了和${prom.n}的午膳之約。`); }
+    if (id === prom.id){ show(prom); await say(prom.id, pick((BOND.VOICE[prom.id] || {}).kept || LIFE2.KEPT), 'happy'); aff(prom.id, 5); note(`守住了和${prom.n}的午膳之約。`); }
     else { aff(prom.id, -4); S.broken = prom.id; toast(`你忘了和${prom.n}的約定……`); } }
   if (id === 'mentee'){ await menteeEvent(); return; }
   if (id) tlog('lunch');
@@ -2637,7 +2641,7 @@ async function festival(){
   const ok = C.filter(c => (S.aff[c.id] || 0) >= 40).sort((a, b) => (S.aff[b.id] || 0) - (S.aff[a.id] || 0)).slice(0, 5);
   const id = await choose('要和誰一起過花朝節？', [...ok.map(c => ({...charOpt(c), sub:stageOf(S.aff[c.id] || 0), hot:false})), {label:'和同院同學一起逛', value:null}]);
   const c = id && BY[id];
-  if (c){ show(c); await say(c.id, pick(['……你約我？好。走吧。','今天人好多，別走散了。','我還以為，你會約別人。'])); }
+  if (c){ show(c); await say(c.id, (BOND.VOICE[c.id] || {}).fest || pick(['……你約我？好。走吧。','今天人好多，別走散了。','我還以為，你會約別人。'])); }
   const a = await choose('先去做什麼？', [
     {label:'繫紅綢，向花神許願', sub:'風雅 +3', value:'feng'},
     {label:'看四院合演的花神舞', sub:'感知 +3', value:'gan'},
