@@ -17,7 +17,7 @@ body{touch-action:manipulation;overscroll-behavior:none}
   padding:9px 18px;font:15px "LXGW WenKai TC","Kaiti TC",serif;letter-spacing:.12em;color:#fbf2df;cursor:pointer;
   background:rgba(22,15,11,.92);border:1px solid #ecd7a2;border-radius:999px;box-shadow:0 6px 20px rgba(0,0,0,.45);white-space:nowrap}
 </style>
-<script>window.GAME_VERSION = '20261117-144541';</script>
+<script>window.GAME_VERSION = '20261117-145922';</script>
 <title>花朝靈院</title>
 <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png">
@@ -590,10 +590,10 @@ html.lowfx .item.in{animation:itemIn 1.2s ease-out forwards}
 // 日文版仍在製作：網址加上 &ja 才會開啟語言切換
 window.JA_ON = true;
 window.LANG = (() => { try { return JA_ON && JSON.parse(localStorage.getItem('huachao-pref') || '{}').lang === 'ja' ? 'ja' : 'zh'; } catch (e) { return 'zh'; } })();
-if (LANG === 'ja'){ document.documentElement.lang = 'ja'; document.write('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap"><script src="story_ja.js?v=20261117-144541"><\/script>'); }
+if (LANG === 'ja'){ document.documentElement.lang = 'ja'; document.write('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap"><script src="story_ja.js?v=20261117-145922"><\/script>'); }
 </script>
-<script src="audio.js?v=20261117-144541"></script>
-<script src="story.js?v=20261117-144541"></script>
+<script src="audio.js?v=20261117-145922"></script>
+<script src="story.js?v=20261117-145922"></script>
 <script>
 (() => {
 const {ARCS,ARC_LINES,VARY2,FACE_TAGS,TUT,VARY,END,BOND,YEAR,POST,QUESTS4,CH4,TIPS:GUIDE,CH3,BAIC,EV_BAI,GOODS,SORT,QUESTS2,CH2,LIFE2,LIFE,MAGIC,TEA,HOUSES,STATS,STAT_ORDER,C:C12,BAI,GRAN,FACES,EV,QUESTS,MAIN,PROLOGUE,PLACES,LOOK,FREE,CLASS_TEXT,SCENE_IMG,SCENE_FALLBACK,CG} = window.STORY;
@@ -1437,7 +1437,7 @@ function fireGame({title, rounds = 3}){
 }
 
 // 藤蔓編織（鈴蘭院、藥草學）：葉片依序發光，照著順序點回去；順序一輪比一輪長
-function vineGame({title, lens = [3, 4, 5]}){
+function vineGame({title, lens = [3, 5]}){
   return new Promise(resolve => {
     if (FAST) return resolve(fastResult(lens.length));
     const {g, field, bar, hint, finish} = gameShell(title, '看清楚葉子發光的順序');
@@ -1458,7 +1458,7 @@ function vineGame({title, lens = [3, 4, 5]}){
       if (i === seq[k]){ flash(i, 'ok', 260); SND.sfx('leaf', k % 4); k++; if (k === seq.length){ live = false; round++; msg.textContent = '藤蔓長出來了！'; setTimeout(() => round < lens.length ? play() : end(), 700); } }
       else { flash(i, 'bad', 300); SND.sfx('wrong'); mistakes++; live = false; msg.textContent = '藤蔓纏亂了……'; setTimeout(end, 800); }
     });
-    function end(){ const full = round === lens.length; finish(resolve, {score: Math.max(1, Math.min(5, 1 + round + (full && !mistakes ? 1 : 0))), full, next: round}); }
+    function end(){ const full = round === lens.length; finish(resolve, {score: full && !mistakes ? 5 : 1 + Math.round(round * 3 / lens.length), full, next: round}); }
     play();
   });
 }
@@ -1468,7 +1468,7 @@ function playGame(kind, {title, short = false, time} = {}){
   const tb = hasFx('time') ? 2000 : 0;
   if (kind === 'yuan') return starGame({title, n: short ? 4 : 5, time: (time || 10000) + tb});
   if (kind === 'fei' || kind === 'craft') return fireGame({title, rounds: short ? 2 : 3});
-  if (kind === 'ling' || kind === 'herb') return vineGame({title, lens: short ? [3, 4] : [3, 4, 5]});
+  if (kind === 'ling' || kind === 'herb') return vineGame({title, lens: short ? [3, 4] : [3, 5]});
   return minigame({title, n: short ? 4 : 5, time: (time || 9000) + tb, decoy: kind === 'zi' ? 2 : 0});
 }
 
@@ -3031,7 +3031,7 @@ document.addEventListener('pointerdown', e => {
 }, true);
 window.__S = () => S;
 if (FAST) window.__D = () => ({C:C.map(c => c.id), lake:presentAt('lake').map(c => c.id), where:whereIs(BY.bai), ready:ready(BY.bai), ev:evState(BY.bai)});
-if (location.hash === '#shot') window.__T = {tr, jaRes, calConv, migrate, fresh, dateLabel, describe, plan, seasonOf, lifeGoal, graduation:() => graduation(), legacy:() => legacy(), pact:c => pactMoment(BY[c]), letter:() => { S.letterLast = -99; return letterNight(); }, pair:(k, p) => { useHp(2); return pairScene(k, PLACES.find(x => x.id === p)); }, yearend:() => yearend(), newyear:() => newyear(), menteeEvent:() => menteeEvent(), yulan:() => yulan(), board:() => board(), market:() => market(), setS:o => { S = migrate(o); hud(); }, arcAt, fmt, keyNeeds, setScene, hud, runStall, market, openTab, learnSpell, SPELL, serve, teaSheet, monthFest, dayCard, incident, run, opening, explore, free, practise, playGame, applyWx, keyTrial, assets, goodsShop, giftMenu: c => giftMenu(c)};
+if (location.hash === '#shot') window.__T = {tr, playGame, jaRes, calConv, migrate, fresh, dateLabel, describe, plan, seasonOf, lifeGoal, graduation:() => graduation(), legacy:() => legacy(), pact:c => pactMoment(BY[c]), letter:() => { S.letterLast = -99; return letterNight(); }, pair:(k, p) => { useHp(2); return pairScene(k, PLACES.find(x => x.id === p)); }, yearend:() => yearend(), newyear:() => newyear(), menteeEvent:() => menteeEvent(), yulan:() => yulan(), board:() => board(), market:() => market(), setS:o => { S = migrate(o); hud(); }, arcAt, fmt, keyNeeds, setScene, hud, runStall, market, openTab, learnSpell, SPELL, serve, teaSheet, monthFest, dayCard, incident, run, opening, explore, free, practise, playGame, applyWx, keyTrial, assets, goodsShop, giftMenu: c => giftMenu(c)};
 // ---------- loading screen ----------
 const imgURL = k => k.includes('/') ? k : `img/${k}.jpg`;
 function assets(){
