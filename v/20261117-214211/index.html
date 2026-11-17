@@ -17,7 +17,7 @@ body{touch-action:manipulation;overscroll-behavior:none}
   padding:9px 18px;font:15px "LXGW WenKai TC","Kaiti TC",serif;letter-spacing:.12em;color:#fbf2df;cursor:pointer;
   background:rgba(22,15,11,.92);border:1px solid #ecd7a2;border-radius:999px;box-shadow:0 6px 20px rgba(0,0,0,.45);white-space:nowrap}
 </style>
-<script>window.GAME_VERSION = '20261117-155447';</script>
+<script>window.GAME_VERSION = '20261117-214211';</script>
 <title>花朝靈院</title>
 <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png">
@@ -590,10 +590,10 @@ html.lowfx .item.in{animation:itemIn 1.2s ease-out forwards}
 // 日文版仍在製作：網址加上 &ja 才會開啟語言切換
 window.JA_ON = true;
 window.LANG = (() => { try { return JA_ON && JSON.parse(localStorage.getItem('huachao-pref') || '{}').lang === 'ja' ? 'ja' : 'zh'; } catch (e) { return 'zh'; } })();
-if (LANG === 'ja'){ document.documentElement.lang = 'ja'; document.write('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap"><script src="story_ja.js?v=20261117-155447"><\/script>'); }
+if (LANG === 'ja'){ document.documentElement.lang = 'ja'; document.write('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap"><script src="story_ja.js?v=20261117-214211"><\/script>'); }
 </script>
-<script src="audio.js?v=20261117-155447"></script>
-<script src="story.js?v=20261117-155447"></script>
+<script src="audio.js?v=20261117-214211"></script>
+<script src="story.js?v=20261117-214211"></script>
 <script>
 (() => {
 const {ARCS,ARC_LINES,VARY2,FACE_TAGS,TUT,VARY,END,BOND,YEAR,POST,QUESTS4,CH4,TIPS:GUIDE,CH3,BAIC,EV_BAI,GOODS,SORT,QUESTS2,CH2,LIFE2,LIFE,MAGIC,TEA,HOUSES,STATS,STAT_ORDER,C:C12,BAI,GRAN,FACES,EV,QUESTS,MAIN,PROLOGUE,PLACES,LOOK,FREE,CLASS_TEXT,SCENE_IMG,SCENE_FALLBACK,CG} = window.STORY;
@@ -701,7 +701,7 @@ function calMigrate(v){
   if (v.blight && typeof v.blight.d === 'number') v.blight.d = v.day;
   if (v.promise && typeof v.promise.day === 'number') v.promise = null;
 }
-function migrate(v){ if (!v) return v; if (v.cal !== 2){ if ((v.day || 0) > 28) calMigrate(v); v.cal = 2; } v.hp ??= 10; v.hpBonus ??= 0; v.inv ??= {}; v.known ??= []; v.cups ??= {}; v.stall ??= {}; v.stall.open ??= false; v.stall.rep ??= 0; v.stall.ups ??= {}; v.stall.earned ??= 0; v.stall.sessions ??= 0; v.mag ??= {}; v.spells ??= []; v.sfrac ??= {}; v.affDay ??= {}; v.seen ??= {}; v.flags ??= {}; v.grades ??= []; v.q2 ??= 0; v.items ??= {}; v.decor ??= {}; v.parcel ??= 0; v.replies ??= 0; v.giftDay ??= {}; v.wx ??= 'sun'; v.bdDone ??= {}; v.promise ??= null; v.broken ??= null; v.keys ??= {}; v.keyHint ??= {}; v.col ??= {}; v.col.gift ??= {}; v.col.inc ??= {}; v.col.fest ??= {}; v.col.bd ??= {}; if (!v.aff2){ v.aff2 = 1; for (const k in (v.aff || {})) v.aff[k] = Math.min(200, v.aff[k] * 2); }
+function migrate(v){ if (!v) return v; v.wish ??= {}; if (v.cal !== 2){ if ((v.day || 0) > 28) calMigrate(v); v.cal = 2; } v.hp ??= 10; v.hpBonus ??= 0; v.inv ??= {}; v.known ??= []; v.cups ??= {}; v.stall ??= {}; v.stall.open ??= false; v.stall.rep ??= 0; v.stall.ups ??= {}; v.stall.earned ??= 0; v.stall.sessions ??= 0; v.mag ??= {}; v.spells ??= []; v.sfrac ??= {}; v.affDay ??= {}; v.seen ??= {}; v.flags ??= {}; v.grades ??= []; v.q2 ??= 0; v.items ??= {}; v.decor ??= {}; v.parcel ??= 0; v.replies ??= 0; v.giftDay ??= {}; v.wx ??= 'sun'; v.bdDone ??= {}; v.promise ??= null; v.broken ??= null; v.keys ??= {}; v.keyHint ??= {}; v.col ??= {}; v.col.gift ??= {}; v.col.inc ??= {}; v.col.fest ??= {}; v.col.bd ??= {}; if (!v.aff2){ v.aff2 = 1; for (const k in (v.aff || {})) v.aff[k] = Math.min(200, v.aff[k] * 2); }
   v.rel ??= {}; v.relDay ??= {}; v.relAsk ??= {}; v.pairs ??= {}; v.pairDay ??= {}; v.letters ??= []; v.letterLast ??= 0;
   v.years ??= []; v.grad ??= {}; v.mentee ??= null; v.finals ??= {};
   v.comm ??= []; v.commDone ??= 0; v.commLast ??= {}; v.col.comm ??= {}; v.col.hue ??= {};
@@ -1715,8 +1715,15 @@ const hasFx = fx => fxN(fx) > 0;
 const lineOf = key => MAGIC.HOUSE[key] || MAGIC.SHARED[key] || [];
 const curSpell = key => lineOf(key).find(x => !S.spells.includes(x.id));
 const spellStat = x => x.stat || HOUSES[S.house].stat;
-const spellReady = x => x && (S.mag[x.id] || 0) >= x.need && S.stats[spellStat(x)] >= x.req;
+// 院系術譜第四層起有封印：一年級五月、二年級三月、三年級一月才解封（同年級的講師才會教）
+const SEAL = {4:(1 - 1) * YLEN + 4 * MLEN + 1, 5:(2 - 1) * YLEN + 2 * MLEN + 1, 6:(3 - 1) * YLEN + 1};
+const IS_HOUSE = new Set(Object.values(MAGIC.HOUSE).flat().map(x => x.id));
+const sealDay = x => x && IS_HOUSE.has(x.id) && SEAL[x.tier] || 0;
+const sealed = x => S.day < sealDay(x);
+const sealLabel = x => { const d = sealDay(x); return `${cn(yearOf(d))}年級${cn(mInYear(d))}月`; };
+const spellReady = x => x && (S.mag[x.id] || 0) >= x.need && S.stats[spellStat(x)] >= x.req && !sealed(x);
 async function learnSpell(x){
+  if (sealDay(x) && S.day - sealDay(x) < 14) await say('', '翻開術譜，原本像被漿糊黏住的那一頁，今天自己鬆開了。');
   S.spells.push(x.id); SND.sfx('magic');
   await card(`<img class="spellimg" src="${x.icon || `img/spell_${x.id}.webp`}" alt=""><span class="small">習得咒術・第${cn(x.tier || S.spells.length)}層</span><span class="big">${x.n}</span><span class="small">${MAGIC.FX[x.fx]}</span>`, 2600);
   await say('', x.learn);
@@ -1733,6 +1740,7 @@ async function practise(key, pts){
   }
   const m = S.mag[x.id] = Math.min(x.need, (S.mag[x.id] || 0) + pts * PACE);
   if (m < x.need) return toast(`「${x.n}」熟練 ${m} / ${x.need}`);
+  if (sealed(x)) return toast(`「${x.n}」已練熟。術譜這一頁還封著，${sealLabel(x)}才會解封`);
   if (!spellReady(x)) return toast(`「${x.n}」已練熟，${STATS[spellStat(x)][0]}還差 ${x.req - S.stats[spellStat(x)]} 才能施展`);
   await learnSpell(x);
 }
@@ -1744,13 +1752,13 @@ function spellBook(){
   if (!S.house) return '';
   const row = (x, cur) => {
     const got = S.spells.includes(x.id), m = S.mag[x.id] || 0, st = spellStat(x);
-    const state = got ? '<span class="tag2 ok">已習得</span>' : cur ? `<span class="tag2">熟練 ${m}/${x.need}</span>` : '<span class="tag2">未解鎖</span>';
+    const state = got ? '<span class="tag2 ok">已習得</span>' : cur ? `<span class="tag2">熟練 ${m}/${x.need}</span>` : '<span class="tag2">未解鎖</span>', seal = !got && sealed(x) ? `<small class="fx">封印・${sealLabel(x)}解封</small>` : '';
     return `<div class="spell ${got ? 'got' : cur ? 'cur' : 'lock'}"><img class="spic" src="${x.icon || `img/spell_${x.id}.webp`}" alt=""><div class="sp-t"><b>${got || cur ? x.n : '？？？'}</b>${state}</div>
       ${got || cur ? `<small>${x.d}</small>` : ''}<small class="fx">${MAGIC.FX[x.fx]}${x.req ? `・需${STATS[st][0]} ${x.req}` : ''}</small>
-      ${cur ? `<div class="bar"><i style="width:${m / x.need * 100}%"></i></div>` : ''}</div>`;
+      ${seal}${cur ? `<div class="bar"><i style="width:${m / x.need * 100}%"></i></div>` : ''}</div>`;
   };
   const line = (key, title) => { const c = curSpell(key); return `${MAGIC.HOUSE[key] ? `<div class="bookhead"><img src="img/book_${key}.webp" alt=""><div><h3>${title}</h3><small>已習得 ${lineOf(key).filter(x => S.spells.includes(x.id)).length} / 6 層</small></div></div>` : `<h3>${title}</h3>`}<div class="spells">${lineOf(key).map(x => row(x, x === c)).join('')}</div>`; };
-  return `<p class="muted" style="margin-top:14px"><img class="hi" src="img/ui_scroll.webp" alt="">上課和晚上自修都會累積熟練。熟練滿了、能力也達標，就能習得咒語，解鎖下一層。</p>`
+  return `<p class="muted" style="margin-top:14px"><img class="hi" src="img/ui_scroll.webp" alt="">上課和晚上自修都會累積熟練。熟練滿了、能力也達標，就能習得咒語，解鎖下一層。院系術譜的後三層有封印，要升到相應的年級才會解開。</p>`
     + line(S.house, `《${HOUSES[S.house].name}術譜》`) + line('herb', '藥草學・共修') + line('craft', '器物製作・共修') + (S.flags.yuBook ? line('yu', '《溯光譜》・玉蘭院') : '');
 }
 
@@ -1798,11 +1806,52 @@ async function incident(pid){
 
 // ---------- 雜貨攤：禮物、宿舍佈置、書冊與家書 ----------
 const GIFT = Object.fromEntries(GOODS.GIFTS.map(g => [g.id, g]));
+// ---------- 心願（二、三年級才開放的大件花費） ----------
+const WISH = Object.fromEntries(GOODS.WISH.map(w => [w.id, w]));
+const WISH_IMG = {tutor:'img/dec_book.webp', roof:'img/letter.webp', robe:'img/ui_medal.webp', feast:'img/life_lunch.webp', garden:'img/loc_herb.webp'};
+const fullMsg = () => S.house && curSpell(S.house) ? '這一層已經練熟了' : '術譜已經全部習得';
+const bookFull = (extra = 0) => { const x = S.house && curSpell(S.house); return !x || (S.mag[x.id] || 0) + extra * PACE >= x.need; };
+const wishOff = w => {
+  if (yearOf(S.day) < w.year) return `${cn(w.year)}年級開放`;
+  if (w.monthly){ if (S.wish[w.id] && monthOf(S.wish[w.id]) === monthOf(S.day)) return '這個月已經請過了'; if (bookFull()) return fullMsg(); return ''; }
+  return S.wish[w.id] ? '已完成' : '';
+};
+async function doWish(id){
+  const w = WISH[id]; S.wish[id] = S.day;
+  if (id === 'tutor'){
+    setScene('宿舍・夜'); await sleep(200);
+    await say('npc:講師', '別急著唸咒。先告訴我，你卡在哪一個字上？');
+    await say('', '講師一直陪你練到熄燈。臨走前，他在你的術譜邊上，用硃砂畫了一個小小的圈。');
+    gain(HOUSES[S.house].stat, 2); await practise(S.house, 15); return;
+  }
+  if (id === 'roof'){
+    note('託商隊把靈石送回雲溪鎮，請工匠修好外婆的老屋。');
+    await say('', '你把靈石和一封信，交給了往雲溪鎮去的商隊。');
+    await say('', '半個月後，信鴿帶回了外婆的字：「屋頂修好了。下雨的晚上，我坐在屋裡聽雨，一滴都沒有漏進來。……你在那邊，也要好好照顧自己。」');
+    return;
+  }
+  if (id === 'robe'){ note('請裁縫在畢業袍的袖口繡上花紋。'); await say('', '裁縫記下了你的尺寸，說畢業典禮前一定送到。袖口要繡什麼花紋、用什麼顏色，他讓你自己挑。'); return; }
+  if (id === 'feast'){
+    setScene('膳堂'); await sleep(200);
+    await say('', '你包下了膳堂一整晚。講師們坐在上首，同學們擠滿了長桌，連總是一個人吃飯的人也來了。');
+    await say('', '有人舉杯說：「敬三年。」整個膳堂的人都跟著舉起了杯子。');
+    for (const c of C) if (S.met[c.id]) aff(c.id, 8);
+    note('辦了一場謝師宴，請講師和同學們吃飯。'); return;
+  }
+  if (id === 'garden'){
+    setScene('鈴蘭藥圃'); await sleep(200);
+    await say('', '工匠在鈴蘭藥圃旁邊圍出了一方小小的花圃。小木牌上寫著你的名字，旁邊還空著一行。');
+    await say('', '空著的那一行，留給以後也想在這裡留下點什麼的人。');
+    note('在靈院捐建了一方花圃。'); return;
+  }
+}
 const parcelOK = () => !S.parcel || monthOf(S.day) > monthOf(S.parcel);
 async function goodsShop(){
   let books = 0;
   await tip('goods');
-  if (FAST){ const d = GOODS.DECOR.find(x => !S.decor[x.id] && S.money >= x.price + 60); if (d){ S.money -= d.price; S.decor[d.id] = true; hud(); } return; }
+  if (FAST){ const d = GOODS.DECOR.find(x => !S.decor[x.id] && S.money >= x.price + 60); if (d){ S.money -= d.price; S.decor[d.id] = true; hud(); }
+    const w = GOODS.WISH.find(w => !wishOff(w) && S.money >= w.price + 500); if (w){ S.money -= w.price; hud(); await doWish(w.id); } return; }
+  let wish = null;
   await panel('', (el, done) => {
     const row = (id, name, sub, price, off, img, tag) => `<button type="button" class="grow" data-id="${id}" ${off || S.money < price ? 'disabled' : ''}>
       ${img ? `<img class="it" src="${img}" alt="">` : ''}<span class="gt"><b>${name}</b><small>${sub}</small></span><em>${tag || price + ' 靈石'}</em></button>`;
@@ -1814,11 +1863,15 @@ async function goodsShop(){
         <h4 class="gh">宿舍佈置<small>一次買下，長期有效。</small></h4>
         <div class="glist">${GOODS.DECOR.map(x => row(x.id, x.n, x.d, x.price, !!S.decor[x.id], `img/dec_${x.id}.webp`, S.decor[x.id] ? '已擁有' : '')).join('')}</div>
         <h4 class="gh">書冊與家書</h4>
-        <div class="glist">${row('book', GOODS.BOOK.n, books ? `${GOODS.BOOK.d}（已買 ${books} 本）` : GOODS.BOOK.d, GOODS.BOOK.price, !S.house || !curSpell(S.house), 'img/dec_book.webp')}
+        <div class="glist">${row('book', GOODS.BOOK.n, bookFull(books * GOODS.BOOK.pts) ? fullMsg() : books ? `${GOODS.BOOK.d}（已買 ${books} 本）` : GOODS.BOOK.d, GOODS.BOOK.price, bookFull(books * GOODS.BOOK.pts), 'img/dec_book.webp')}
           ${row('parcel', GOODS.PARCEL.n, parcelOK() ? GOODS.PARCEL.d : '這個月已經寄過了，下個月再寄吧', GOODS.PARCEL.price, !parcelOK(), 'img/dec_parcel.webp', parcelOK() ? '' : '已寄出')}</div>
+        ${yearOf(S.day) >= 2 ? `<h4 class="gh">心願<small>一次一件。買下之後，離開市場時就會去辦。</small></h4>
+        <div class="glist">${GOODS.WISH.filter(w => yearOf(S.day) >= w.year).map(w => { const off = wishOff(w); return row('w:' + w.id, w.n, w.d, w.price, !!off || !!wish, WISH_IMG[w.id], off || (wish === w.id ? '待辦' : '')); }).join('')}
+        ${yearOf(S.day) < 3 ? '<p class="muted">（升上三年級之後，這裡還會多幾件心願。）</p>' : ''}</div>` : ''}
         <div class="tp-acts"><button type="button" class="act main" data-x="done">離開</button></div>`;
       el.querySelectorAll('.grow').forEach(b => b.onclick = () => {
         const id = b.dataset.id;
+        if (id.startsWith('w:')){ const w = WISH[id.slice(2)]; if (wish || S.money < w.price) return; S.money -= w.price; wish = w.id; SND.sfx('gain'); toast(`「${w.n}」`); hud(); draw(); return; }
         const price = GIFT[id] ? GIFT[id].price : id === 'book' ? GOODS.BOOK.price : id === 'parcel' ? GOODS.PARCEL.price : GOODS.DECOR.find(x => x.id === id).price;
         if (S.money < price) return;
         S.money -= price; SND.sfx('gain');
@@ -1832,6 +1885,7 @@ async function goodsShop(){
     };
     draw();
   });
+  if (wish) await doWish(wish);
   if (books && S.house && curSpell(S.house)){
     await say('', books > 1 ? `你抱著${cn(books)}本手札回到宿舍，一頁一頁地讀。前人的筆記裡，寫滿了你正卡住的地方。` : '你翻開手札。前人的字跡很工整，在你正卡住的地方，畫了一個小小的圈。');
     await practise(S.house, GOODS.BOOK.pts * books);
@@ -2149,10 +2203,15 @@ const fillC = (t, c) => t.replace(/\{c\}/g, c ? c.n : '');
 async function graduation(){
   setScene('畢業典禮', CG.cg_end_grad); await sleep(300);
   await card(`<img class="crestimg" src="img/ui_medal.webp" alt=""><span class="small">花朝靈院第二十五屆</span><span class="big">畢業典禮</span>`, 2600);
-  for (const x of END.CERE) Array.isArray(x) ? await say(x[0], x[1]) : await say('', x);
+  for (const x of END.CERE){
+    Array.isArray(x) ? await say(x[0], x[1]) : await say('', x);
+    if (S.wish.robe && /畢業袍/.test(Array.isArray(x) ? x[1] : x)) await say('', '袖口那圈花紋，是你請城裡的裁縫另外繡上去的，顏色也是你自己挑的。走上石階的時候，有人回頭多看了一眼。');
+  }
   if (S.mentee) await say(END.MENTEE[0].replace('{m}', S.mentee.n), END.MENTEE[1]);
   setScene('花月湖');
   for (const x of END.GRAN) Array.isArray(x) ? await say(x[0], x[1]) : await say('', x);
+  if (S.wish.roof) await say('', '外婆說，老屋的屋頂再也沒有漏過雨。你寄回去的每一封信，她都收在不會被雨打濕的櫃子裡。');
+  if (S.wish.garden) await say('', '離開前，你繞到鈴蘭藥圃看了一眼。你捐的那方花圃，開了今年的第一批花。');
   // 關係結局
   const lover = Object.keys(S.rel).find(k => S.rel[k] === 'love' && BY[k] && END.LOVE[k]);
   const fr = C.filter(c => S.rel[c.id] === 'friend').sort((a, b) => (S.aff[b.id] || 0) - (S.aff[a.id] || 0))[0];

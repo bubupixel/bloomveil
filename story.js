@@ -1669,7 +1669,8 @@ const MAGIC = (() => {
     hp:'體力上限 +1',
     bond:'同院同學的好感提升多兩成'
   };
-  const NEED = [6, 16, 32, 56, 88, 130], REQ = [0, 12, 25, 40, 55, 70];
+  // 第四層起熟練要求大幅提高，而且有封印（見 index.html SEAL），分佈到二、三年級
+  const NEED = [6, 16, 40, 100, 180, 280], REQ = [0, 12, 25, 45, 60, 72];
   const FXS = ['cls','pat','gather','time','hp','bond'];
   const mk = list => list.map(([id, n, d, learn], i) => ({id, n, d, learn, need:NEED[i], req:REQ[i], fx:FXS[i], tier:i + 1}));
   const HOUSE = {
@@ -1982,7 +1983,13 @@ const GOODS = {
     {id:'desk', n:'雕花寫字檯', price:150, d:'自由時間練習能力時，效果更好'},
     {id:'qin', n:'古琴', price:200, d:'自由時間多一個選擇「撫琴」：不耗體力，還能放鬆一下'}
   ],
-  BOOK: {n:'咒術手札', price:60, pts:5, d:'前人的修習筆記。讀完後，目前修習的咒語熟練 +5'},
+  WISH:[
+    {id:'tutor', n:'名師指點', price:400, year:2, monthly:true, d:'請講師單獨指點一個晚上。修習中的咒術熟練 +30，院系能力 +2。每月一次。'},
+    {id:'roof', n:'修葺外婆的老屋', price:1800, year:2, d:'雲溪鎮老屋的屋頂漏雨好多年了。託商隊把靈石和工匠一起送回去。'},
+    {id:'robe', n:'繡畢業袍', price:1500, year:3, d:'請城裡的裁縫，在畢業袍的袖口繡上只屬於你的花紋。畢業典禮那天會穿上。'},
+    {id:'feast', n:'謝師宴', price:2400, year:3, d:'包下膳堂一晚，請講師和認識的同學吃飯。所有認識的人好感 +8。'},
+    {id:'garden', n:'捐建一方花圃', price:6000, year:3, d:'在靈院裡捐建一方花圃，立一塊寫著你名字的小木牌。'}],
+  BOOK: {n:'咒術手札', price:60, pts:5, d:'前人的修習筆記。讀完後，目前修習的咒語熟練 +10'},
   PARCEL: {n:'寄給外婆的包裹', price:50, d:'每月一次。茶葉、點心和一封信，寄回雲溪鎮'},
   // 外婆的回信（依序寄來）
   REPLIES: [
