@@ -17,7 +17,7 @@ body{touch-action:manipulation;overscroll-behavior:none}
   padding:9px 18px;font:15px "LXGW WenKai TC","Kaiti TC",serif;letter-spacing:.12em;color:#fbf2df;cursor:pointer;
   background:rgba(22,15,11,.92);border:1px solid #ecd7a2;border-radius:999px;box-shadow:0 6px 20px rgba(0,0,0,.45);white-space:nowrap}
 </style>
-<script>window.GAME_VERSION = '20261117-220512';</script>
+<script>window.GAME_VERSION = '20261117-230118';</script>
 <title>花朝靈院</title>
 <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png">
@@ -542,6 +542,8 @@ html.lowfx .item.in{animation:itemIn 1.2s ease-out forwards}
 .yr-n{margin:2px 0 0;padding-left:18px;font-size:12.5px;color:var(--ink-soft)}
 .yr-d{margin:6px 0;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.45)}.yr-d summary{font-weight:700;cursor:pointer}
 .reltag{color:#c2456a;font-weight:700}
+.person .act.brk{min-height:28px;font-size:12px;padding:0 12px;margin-top:6px;color:#a33a35;border-color:#d9b3ae}
+.person .act.brk.armed{color:#fff}
 </style>
 
 <div class="backdrop" id="backdrop"></div>
@@ -590,10 +592,10 @@ html.lowfx .item.in{animation:itemIn 1.2s ease-out forwards}
 // 日文版仍在製作：網址加上 &ja 才會開啟語言切換
 window.JA_ON = true;
 window.LANG = (() => { try { return JA_ON && JSON.parse(localStorage.getItem('huachao-pref') || '{}').lang === 'ja' ? 'ja' : 'zh'; } catch (e) { return 'zh'; } })();
-if (LANG === 'ja'){ document.documentElement.lang = 'ja'; document.write('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap"><script src="story_ja.js?v=20261117-220512"><\/script>'); }
+if (LANG === 'ja'){ document.documentElement.lang = 'ja'; document.write('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap"><script src="story_ja.js?v=20261117-230118"><\/script>'); }
 </script>
-<script src="audio.js?v=20261117-220512"></script>
-<script src="story.js?v=20261117-220512"></script>
+<script src="audio.js?v=20261117-230118"></script>
+<script src="story.js?v=20261117-230118"></script>
 <script>
 (() => {
 const {ARCS,ARC_LINES,VARY2,FACE_TAGS,TUT,VARY,END,BOND,YEAR,POST,QUESTS4,CH4,TIPS:GUIDE,CH3,BAIC,EV_BAI,GOODS,SORT,QUESTS2,CH2,LIFE2,LIFE,MAGIC,TEA,HOUSES,STATS,STAT_ORDER,C:C12,BAI,GRAN,FACES,EV,QUESTS,MAIN,PROLOGUE,PLACES,LOOK,FREE,CLASS_TEXT,SCENE_IMG,SCENE_FALLBACK,CG} = window.STORY;
@@ -1308,13 +1310,16 @@ async function meet(c, ctx, where){
   }
   if (was && await pactMoment(c)) return;
   if (ctx === 'lunch'){ const gl = S.grad[c.id] && YEAR.GRADUATE[c.id]; const R = BOND.REL[c.id], rl = S.rel[c.id];
-    await say(c.id, rl && R && Math.random() < .55 ? pick(rl === 'love' ? R.L : R.F) : gl && Math.random() < .5 ? pick(gl.lunch) : S.flags.yulanOpen && POST.LUNCH4[c.id] && Math.random() < .45 ? pick(POST.LUNCH4[c.id]) : vary('ln' + c.id, [...c.lunch, ...(VARY.LUNCH[c.id] || [])]), 'happy'); aff(c.id, 5, true); }
+    const BX = rl === 'ex' && BOND.BREAK[c.id];
+    if (BX && Math.random() < .75){ await say(c.id, pick(BX.X), 'calm'); aff(c.id, 5, true); return; }
+    await say(c.id, rl && rl !== 'ex' && R && Math.random() < .55 ? pick(rl === 'love' ? R.L : R.F) : gl && Math.random() < .5 ? pick(gl.lunch) : S.flags.yulanOpen && POST.LUNCH4[c.id] && Math.random() < .45 ? pick(POST.LUNCH4[c.id]) : vary('ln' + c.id, [...c.lunch, ...(VARY.LUNCH[c.id] || [])]), 'happy'); aff(c.id, 5, true); }
   else if (ctx === 'date'){
     const D = VARY.DINE[c.id];
     if (!D){ if ((S.aff[c.id] || 0) >= 100){ await say(c.id, c.dateA[1]); await say(c.id, c.dateB, 'happy'); } else await say(c.id, c.dateA[0], 'happy'); }
     else {
       const rl = S.rel[c.id], RL = VARY2.REL[c.id], SE = VARY2.SEASON[c.id], hi = (S.aff[c.id] || 0) >= 100;
-      if (rl && RL && Math.random() < .45) await say(c.id, vary('dnr' + c.id, RL[rl === 'love' ? 'L' : 'F']));
+      if (rl === 'ex' && BOND.BREAK[c.id]) await say(c.id, pick(BOND.BREAK[c.id].X), 'calm');
+      else if (rl && RL && Math.random() < .45) await say(c.id, vary('dnr' + c.id, RL[rl === 'love' ? 'L' : 'F']));
       else if (SE && Math.random() < (hi ? .25 : .3)) await say(c.id, SE[seasonOf(S.day)]);
       else await say(c.id, hi ? vary('dnb' + c.id, D.b) : vary('dna' + c.id, D.a), hi ? undefined : 'happy');
       if (hi) await say(c.id, vary('dnc' + c.id, D.close), 'happy');
@@ -1335,7 +1340,7 @@ async function meet(c, ctx, where){
   }
 }
 const ready = c => { const st = S.met[c.id] && evState(c); return st && !st.locked; };
-const relName = id => S.rel && S.rel[id] === 'love' ? '戀人' : S.rel && S.rel[id] === 'friend' ? '摯友' : '';
+const relName = id => S.rel && S.rel[id] === 'love' ? '戀人' : S.rel && S.rel[id] === 'friend' ? '摯友' : S.rel && S.rel[id] === 'ex' ? '前戀人' : '';
 const relOf = c => relName(c.id) || stageOf(S.aff[c.id] || 0);
 const charOpt = c => ({label: S.met[c.id] ? c.n : `${HOUSES[c.h].name}的同學`, img:c.img, color:HOUSES[c.h].color, value:c.id,
   sub: !S.met[c.id] ? '未認識' : ready(c) ? '✦ 有話想說' : relOf(c), hot: ready(c)});
@@ -2129,7 +2134,7 @@ async function board(){
 // ---------- 關係深化 ----------
 async function pactMoment(c){
   const R = BOND.REL[c.id], ev = S.ev[c.id] || 0, cur = S.rel[c.id];
-  if (!R || ev < 6) return false;
+  if (!R || ev < 6 || cur === 'ex') return false;
   const canLove = ev >= 8 && !Object.values(S.rel).includes('love');
   const stage = ev >= 8 ? 8 : 6;
   // 揀咗「再等等」：兩個星期後會再問一次（以前會永遠錯過）
@@ -2151,6 +2156,22 @@ async function pactMoment(c){
   note(`和${c.n}成為了${v === 'love' ? '戀人' : '摯友'}。`);
   return true;
 }
+// 解除戀人關係：喺人物頁按兩次確定，下一個時段開始時同對方講清楚
+async function breakScene(){
+  const c = BY[S.breakUp]; S.breakUp = null;
+  if (!c || S.rel[c.id] !== 'love') return;
+  setScene('花月湖'); await sleep(300);
+  await say('', `你約了${c.n}在花月湖邊見面。`);
+  show(c); await say('', '你把想了很久的話，說出了口。');
+  const B = BOND.BREAK[c.id];
+  await say(c.id, B ? B.bye : BOND.WAIT, 'sad');
+  show(null);
+  S.rel[c.id] = 'ex'; S.relDay[c.id] = S.day; S.aff[c.id] = Math.max(0, (S.aff[c.id] || 0) - 40);
+  // 其他已經集齊事件、之前揀咗摯友嘅人，之後見面會再問一次
+  for (const o of C) if (o.id !== c.id && (S.relAsk[o.id] || 0) >= 8){ S.relAsk[o.id] = 7.5; S.relWait[o.id] = S.day - 14; }
+  await card(`<img class="crestimg" src="img/ui_knot.webp" alt=""><span class="small">${c.n}</span><span class="big">不再是戀人</span>`, 2200);
+  note(`和${c.n}結束了戀人關係。`);
+}
 async function anniversary(){
   for (const [id, r] of Object.entries(S.rel)){
     if (r !== 'love' || !BY[id]) continue;
@@ -2160,7 +2181,7 @@ async function anniversary(){
 }
 async function letterNight(){
   if (S.day - S.letterLast < 4 || Math.random() > .35) return;
-  const who = C.filter(c => BOND.REL[c.id] && (S.rel[c.id] || (S.ev[c.id] || 0) >= 4) && S.letters.filter(l => l.id === c.id).length < BOND.REL[c.id].letters.length);
+  const who = C.filter(c => BOND.REL[c.id] && S.rel[c.id] !== 'ex' && (S.rel[c.id] || (S.ev[c.id] || 0) >= 4) && S.letters.filter(l => l.id === c.id).length < BOND.REL[c.id].letters.length);
   if (!who.length) return;
   const w = who.sort((a, b) => (S.rel[b.id] ? 1 : 0) - (S.rel[a.id] ? 1 : 0) || Math.random() - .5)[0], R = BOND.REL[w.id];
   const k = S.letters.filter(l => l.id === w.id).length;
@@ -2742,7 +2763,7 @@ function openTab(t){
       const m = S.met[c.id], v = S.aff[c.id] || 0, n = S.ev[c.id] || 0;
       return `<div class="person ${m ? '' : 'unknown'}" style="--c:${HOUSES[c.h].color}"><img src="${ava(c.img)}" alt=""><div>
         <div class="nm">${m ? c.n : '？？？'}${m && ready(c) ? ' ✦' : ''}</div><div class="meta"><img class="mcrest" src="img/crest_${c.h}.webp" alt="">${HOUSES[c.h].name}・${m ? c.role : '未認識'}</div>${m && HAUNT[c.id] ? `<div class="meta haunt"><img class="mcrest" src="img/life_pin.webp" alt="">${HAUNT[c.id][0] === HAUNT[c.id][1] ? `只在${PLACE_N[HAUNT[c.id][0]]}` : `常在${PLACE_N[HAUNT[c.id][0]]}・偶爾在${PLACE_N[HAUNT[c.id][1]]}`}・生日 ${bdLabel(c.id)}</div>` : ''}
-        ${m ? `<div class="hrow">${heartsHTML(v)}<span>${relName(c.id) ? `<b class="reltag">${relName(c.id)}</b>・` : ''}${stageOf(v)}・${v}</span></div>` : ''}${m ? `<div class="evs">${'◆'.repeat(n)}${'◇'.repeat(EV[c.id].length - n)}</div>` : ''}</div>
+        ${m ? `<div class="hrow">${heartsHTML(v)}<span>${relName(c.id) ? `<b class="reltag">${relName(c.id)}</b>・` : ''}${stageOf(v)}・${v}</span></div>` : ''}${m ? `<div class="evs">${'◆'.repeat(n)}${'◇'.repeat(EV[c.id].length - n)}</div>` : ''}${S.rel[c.id] === 'love' && S.house ? `<button type="button" class="act brk" data-brk="${c.id}">${S.breakUp === c.id ? '已決定・下個時段' : '解除戀人關係'}</button>` : ''}</div>
         ${m ? (ready(c) ? '<span class="tag">有話想說</span>' : '') : '<span class="tag">—</span>'}</div>`;
     }).join('');
     if (!S.flags.baiFree) h += `<div class="person unknown" style="--c:${HOUSES.yu.color}"><img src="${ava(13)}" alt=""><div><div class="nm">${S.flags.baiName ? '白溯光' : '？？？'}</div><div class="meta"><img class="mcrest" src="img/crest_yu.webp" alt="">玉蘭院・${S.flags.baiName ? '院師・在鏡子的另一邊' : S.quest >= 2 ? '曾在花月湖出現' : '尚無線索'}</div></div><span class="tag">封印</span></div>`;
@@ -2767,6 +2788,12 @@ function openTab(t){
   }
   E.sheet.innerHTML = h; E.sheet.hidden = false; E.sheet.scrollTop = 0;
   bindClose();
+  E.sheet.querySelectorAll('[data-brk]').forEach(b => b.onclick = () => {
+    if (S.breakUp) return;
+    if (!arm(b, '再按一次確定')) return;
+    S.breakUp = b.dataset.brk; b.textContent = '已決定・下個時段'; b.classList.remove('armed'); b.disabled = true;
+    toast(`你決定找${BY[S.breakUp].n}談一談。`);
+  });
   E.sheet.querySelectorAll('[data-cg]').forEach(b => b.onclick = () => {
     const c = BY[b.dataset.cg], v = document.createElement('div');
     v.className = 'viewer'; v.style.backgroundImage = `url("${CG['cg_' + c.id]}")`;
@@ -3040,6 +3067,7 @@ async function loop(){
       const k = P[S.slot]; S.today = S.slot === 0 ? [] : S.today; checkpoint(); hud();
       if (S.house && S.hp <= 2 && k !== 'rest') await tip('tired');
       if (S.house && k === 'lunch'){ setScene('膳堂'); await sleep(300); await tip('basics'); }
+      if (S.breakUp) await breakScene();
       const skip = await storyBeat(S.day, k);
       if (!skip) await SLOTS[k]();
       tutCheck(); S.slot++; hud();
