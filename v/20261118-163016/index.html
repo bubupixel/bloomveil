@@ -17,7 +17,7 @@ body{touch-action:manipulation;overscroll-behavior:none}
   padding:9px 18px;font:15px "LXGW WenKai TC","Kaiti TC",serif;letter-spacing:.12em;color:#fbf2df;cursor:pointer;
   background:rgba(22,15,11,.92);border:1px solid #ecd7a2;border-radius:999px;box-shadow:0 6px 20px rgba(0,0,0,.45);white-space:nowrap}
 </style>
-<script>window.GAME_VERSION = '20261118-004813';</script>
+<script>window.GAME_VERSION = '20261118-163016';</script>
 <title>花朝靈院</title>
 <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png">
@@ -397,6 +397,9 @@ button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px so
 .boxbtns{position:absolute;right:12px;top:-15px;display:flex;gap:6px;z-index:2}
 .bb{font:inherit;font-size:12px;letter-spacing:.15em;padding:4px 10px 4px 12px;border-radius:999px;border:1px solid var(--gold);background:rgba(28,20,14,.82);color:#f6ead0;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.35)}
 .bb.on{background:var(--house);color:#fff}
+.autobar{position:absolute;right:12px;top:-16px;z-index:4;font:inherit;font-size:12.5px;letter-spacing:.1em;padding:5px 12px;border-radius:999px;border:1px solid var(--gold);background:rgba(28,20,14,.88);color:#fbe7c4;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.35);white-space:nowrap}
+.choices button.autoopt{grid-column:1/-1;border-style:dashed;min-height:44px;flex-direction:column;align-items:flex-start;justify-content:center;gap:2px}
+.choices button.autoopt .t{width:auto}.choices button.autoopt .sub{margin:0;text-align:left;max-width:none}
 .bl{display:flex;flex-direction:column;gap:10px;max-height:62vh;overflow-y:auto;padding:4px 2px}
 .bl p{margin:0;font-size:15px;line-height:1.7}
 .bl p b{display:block;font-size:12.5px;color:var(--house);letter-spacing:.1em}
@@ -573,6 +576,7 @@ html.lowfx .item.in{animation:itemIn 1.2s ease-out forwards}
       <span class="speaker" id="speaker" hidden></span><span class="affrow" id="affrow" hidden></span>
       <p class="line" id="line"></p>
       <span class="more" id="more" hidden></span>
+      <button type="button" id="autoBar" class="autobar" hidden>⏸ 停止照舊</button>
       <span class="boxbtns"><button type="button" class="bb" id="btnLog" aria-label="對白回顧">回顧</button><button type="button" class="bb" id="btnSkip" aria-label="略過已讀" aria-pressed="false">略過</button></span>
     </div>
   </div>
@@ -592,10 +596,10 @@ html.lowfx .item.in{animation:itemIn 1.2s ease-out forwards}
 // 日文版仍在製作：網址加上 &ja 才會開啟語言切換
 window.JA_ON = true;
 window.LANG = (() => { try { return JA_ON && JSON.parse(localStorage.getItem('huachao-pref') || '{}').lang === 'ja' ? 'ja' : 'zh'; } catch (e) { return 'zh'; } })();
-if (LANG === 'ja'){ document.documentElement.lang = 'ja'; document.write('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap"><script src="story_ja.js?v=20261118-004813"><\/script>'); }
+if (LANG === 'ja'){ document.documentElement.lang = 'ja'; document.write('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap"><script src="story_ja.js?v=20261118-163016"><\/script>'); }
 </script>
-<script src="audio.js?v=20261118-004813"></script>
-<script src="story.js?v=20261118-004813"></script>
+<script src="audio.js?v=20261118-163016"></script>
+<script src="story.js?v=20261118-163016"></script>
 <script>
 (() => {
 const {ARCS,ARC_LINES,VARY2,FACE_TAGS,TUT,VARY,END,BOND,YEAR,POST,QUESTS4,CH4,TIPS:GUIDE,CH3,BAIC,EV_BAI,GOODS,SORT,QUESTS2,CH2,LIFE2,LIFE,MAGIC,TEA,HOUSES,STATS,STAT_ORDER,C:C12,BAI,GRAN,FACES,EV,QUESTS,MAIN,PROLOGUE,PLACES,LOOK,FREE,CLASS_TEXT,SCENE_IMG,SCENE_FALLBACK,CG} = window.STORY;
@@ -703,7 +707,7 @@ function calMigrate(v){
   if (v.blight && typeof v.blight.d === 'number') v.blight.d = v.day;
   if (v.promise && typeof v.promise.day === 'number') v.promise = null;
 }
-function migrate(v){ if (!v) return v; v.wish ??= {}; v.afrac ??= {}; v.relWait ??= {}; v.evPace ??= (v.day || 0) > 1 ? 'old' : 'new'; if (v.cal !== 2){ if ((v.day || 0) > 28) calMigrate(v); v.cal = 2; } v.hp ??= 10; v.hpBonus ??= 0; v.inv ??= {}; v.known ??= []; v.cups ??= {}; v.stall ??= {}; v.stall.open ??= false; v.stall.rep ??= 0; v.stall.ups ??= {}; v.stall.earned ??= 0; v.stall.sessions ??= 0; v.mag ??= {}; v.spells ??= []; v.sfrac ??= {}; v.affDay ??= {}; v.seen ??= {}; v.flags ??= {}; v.grades ??= []; v.q2 ??= 0; v.items ??= {}; v.decor ??= {}; v.parcel ??= 0; v.replies ??= 0; v.giftDay ??= {}; v.wx ??= 'sun'; v.bdDone ??= {}; v.promise ??= null; v.broken ??= null; v.keys ??= {}; v.keyHint ??= {}; v.col ??= {}; v.col.gift ??= {}; v.col.inc ??= {}; v.col.fest ??= {}; v.col.bd ??= {}; if (!v.aff2){ v.aff2 = 1; for (const k in (v.aff || {})) v.aff[k] = Math.min(200, v.aff[k] * 2); }
+function migrate(v){ if (!v) return v; v.wish ??= {}; v.afrac ??= {}; v.autoMem ??= {}; v.gavg ??= {}; for (const o of [v.cups, v.inv]) if (o) for (const k in o) if (!(o[k] >= 0)) o[k] = 0; v.relWait ??= {}; v.evPace ??= (v.day || 0) > 1 ? 'old' : 'new'; if (v.cal !== 2){ if ((v.day || 0) > 28) calMigrate(v); v.cal = 2; } v.hp ??= 10; v.hpBonus ??= 0; v.inv ??= {}; v.known ??= []; v.cups ??= {}; v.stall ??= {}; v.stall.open ??= false; v.stall.rep ??= 0; v.stall.ups ??= {}; v.stall.earned ??= 0; v.stall.sessions ??= 0; v.mag ??= {}; v.spells ??= []; v.sfrac ??= {}; v.affDay ??= {}; v.seen ??= {}; v.flags ??= {}; v.grades ??= []; v.q2 ??= 0; v.items ??= {}; v.decor ??= {}; v.parcel ??= 0; v.replies ??= 0; v.giftDay ??= {}; v.wx ??= 'sun'; v.bdDone ??= {}; v.promise ??= null; v.broken ??= null; v.keys ??= {}; v.keyHint ??= {}; v.col ??= {}; v.col.gift ??= {}; v.col.inc ??= {}; v.col.fest ??= {}; v.col.bd ??= {}; if (!v.aff2){ v.aff2 = 1; for (const k in (v.aff || {})) v.aff[k] = Math.min(200, v.aff[k] * 2); }
   v.rel ??= {}; v.relDay ??= {}; v.relAsk ??= {}; v.pairs ??= {}; v.pairDay ??= {}; v.letters ??= []; v.letterLast ??= 0;
   v.years ??= []; v.grad ??= {}; v.mentee ??= null; v.finals ??= {};
   v.comm ??= []; v.commDone ??= 0; v.commLast ??= {}; v.col.comm ??= {}; v.col.hue ??= {};
@@ -724,6 +728,7 @@ async function tip(k){
   if (FAST || TIPSEEN.has(k) || !GUIDE[k]) return;
   TIPSEEN.add(k); store(TIP_KEY, JSON.stringify([...TIPSEEN]));
   const T = GUIDE[k]; SND.sfx('page');
+  panel.keep = true; setTimeout(() => panel.keep = false, 0);
   await panel('', (el, done) => {
     el.querySelector('.tp-in').innerHTML = `<header><img class="hicon" src="${T.icon}" alt=""><h3>${T.n}</h3><span class="coinline">小提示</span></header>
       <div class="tipbody">${T.t.map(x => `<p>${x}</p>`).join('')}</div><div class="tp-acts"><button type="button" class="act main" data-x="ok">知道了</button></div>`;
@@ -1020,6 +1025,7 @@ function tap(){
 }
 $('btnLog').onclick = e => { e.stopPropagation(); backlog(); };
 $('btnSkip').onclick = e => { e.stopPropagation(); setSkip(!PREF.skip); };
+$('autoBar').onclick = e => { e.stopPropagation(); stopAuto('已停止照舊過日子'); };
 setSkip(PREF.skip, true); applyLowFx();
 E.app.addEventListener('click', e => {
   if (e.target.closest('button,input,.sheet,.game,.card,.choices')) return;
@@ -1057,8 +1063,10 @@ async function say(id, text, face){
   E.more.hidden = true;
   const line = fmt(text), key = hashLine((w ? w.n : '') + '|' + line), seen = READ.has(key);
   logLine(w ? (w.me ? S.name : w.n) : '', line);
+  if (AUTO && !seen && !FAST && RUN_D > 0) stopAuto('遇到新的劇情，已停止照舊');
   if (PREF.skip && !seen && !FAST){ setSkip(false, true); toast('遇到新的對白，已停止略過'); }
-  typeText.instant = PREF.skip && seen;
+  const fastOn = (PREF.skip || AUTO) && seen;
+  typeText.instant = fastOn;
   await typeText(line);
   typeText.instant = false;
   markRead(key);
@@ -1066,11 +1074,28 @@ async function say(id, text, face){
   if (FAST) return;
   await new Promise(r => {
     tapWait = r;
-    if (PREF.skip && seen) setTimeout(() => { if (tapWait === r){ tapWait = null; r(); } }, 90);
+    if (fastOn) setTimeout(() => { if (tapWait === r){ tapWait = null; r(); } }, AUTO ? 260 : 90);
+    else if (AUTO) setTimeout(() => { if (tapWait === r){ tapWait = null; r(); } }, 900 + [...line].length * 45);
     else if (PREF.auto) setTimeout(() => { if (tapWait === r){ tapWait = null; r(); } }, 1400 + [...line].length * 55);
   });
   E.more.hidden = true;
 }
+// ---------- 照舊過日子：平淡日子照上次嘅安排自動過，有新事情就停 ----------
+let AUTO = false, curSlot = '', autoPath = '';
+const AUTO_SLOTS = new Set(['class', 'lunch', 'explore', 'outing', 'dinner', 'free', 'rest']);
+const autoOK = () => S && S.house && S.day > 28 && AUTO_SLOTS.has(curSlot);
+function setAuto(on, why){
+  if (AUTO === on) return; AUTO = on;
+  E.app.classList.toggle('autoing', on); $('autoBar').hidden = !on;
+  if (why) toast(why);
+}
+function stopAuto(why){
+  if (!AUTO) return;
+  if (window.__autoLog) window.__autoLog.push([S.day, curSlot, autoPath, why, [...E.choices.querySelectorAll('button')].map(b => (b.dataset.al || '') + (b.querySelector('.hot') ? '*' : '')).join(','), E.line.textContent.slice(0, 30)]);
+  setAuto(false, why);
+}
+// 測試用：照舊過日子的內部狀態
+window.__autoDbg = {readAllRoutine(){ const h = READ.has.bind(READ); READ.has = k => RUN_D === 0 || h(k); }};
 function choose(prompt, opts){
   if (prompt){ setSpeaker(null); E.line.textContent = fmt(prompt); logLine('', fmt(prompt)); }
   E.more.hidden = true; E.box.classList.add('wait'); tapWait = null;
@@ -1086,9 +1111,27 @@ function choose(prompt, opts){
       else if (o.icon){ const im = document.createElement('img'); im.src = o.icon; im.alt = ''; im.className = 'ic'; b.appendChild(im); }
       const t = document.createElement('span'); t.className = 't'; t.textContent = o.noT ? o.label : fmt(o.label); if (o.noT) b.setAttribute('translate', 'no'); b.appendChild(t);
       if (o.sub){ const s = document.createElement('span'); s.className = 'sub' + (o.hot ? ' hot' : ''); s.textContent = o.sub; b.appendChild(s); }
-      b.onclick = () => { SND.sfx('choose'); logLine('', '▸ ' + fmt(o.label), 'pick'); E.choices.innerHTML = ''; E.choices.classList.remove('hasmore'); document.querySelectorAll('.morehint').forEach(x => x.remove()); E.scrim.classList.remove('on'); E.box.classList.remove('wait'); res(o.value); };
+      b.dataset.al = o.label;
+      b.onclick = () => { if (AUTO_SLOTS.has(curSlot) && autoPath.length < 160){ S.autoMem[curSlot + '>' + autoPath] = o.label; autoPath += '|' + o.label; } SND.sfx('choose'); logLine('', '▸ ' + fmt(o.label), 'pick'); E.choices.innerHTML = ''; E.choices.classList.remove('hasmore'); document.querySelectorAll('.morehint').forEach(x => x.remove()); E.scrim.classList.remove('on'); E.box.classList.remove('wait'); res(o.value); };
       E.choices.appendChild(b);
     });
+    const akey = curSlot + '>' + autoPath, want = S.autoMem && S.autoMem[akey];
+    // 「✦」新機會：同一個提示只會令照舊停一次（之後照舊會略過佢，除非佢就係平時揀嘅嗰個）
+    const en = opts.filter(o => !o.disabled), hotKey = o => o.hotKey || o.label + '|' + (o.sub || '') + '|' + ((C.find(c => c.n === o.label) || {}).id ? S.ev[C.find(c => c.n === o.label).id] || 0 : ''), newHot = en.filter(o => o.hot && !(S.autoHot || {})[hotKey(o)]);
+    const hot = newHot.length > 0, hit = want && en.find(o => o.label === want);
+    if (AUTO && hot){ S.autoHot = S.autoHot || {}; for (const o of newHot) S.autoHot[hotKey(o)] = 1; }
+    if (AUTO && !FAST){
+      if (!autoOK()) stopAuto('遇到特別的安排，已停止照舊');
+      else if (hot) stopAuto('有新的事情可以做，已停止照舊');
+      else if (!hit) stopAuto('今天的選擇和平時不一樣，已停止照舊');
+      else setTimeout(() => { const b = [...E.choices.querySelectorAll('button')].find(x => x.dataset.al === want && !x.disabled); if (b && AUTO) b.click(); }, 380);
+    }
+    if (!AUTO && !FAST && autoOK() && !autoPath && hit && !hot){
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'autoopt';
+      b.innerHTML = '<span class="t">⏩ 照舊過日子</span><span class="sub">照平時的安排自動過，有新的事情就會停下</span>';
+      b.onclick = () => { setAuto(true, '照舊過日子：開始'); const t = [...E.choices.querySelectorAll('button')].find(x => x.dataset.al === want && !x.disabled); if (t) t.click(); };
+      E.choices.prepend(b);
+    }
     moreHint();
     if (FAST) setTimeout(() => { const bs = [...E.choices.querySelectorAll('button:not([disabled])')]; const hot = bs.filter(x => x.querySelector('.sub.hot')); if (bs.length) pick(hot.length && Math.random() < .7 ? hot : bs).click(); }, 0);
   });
@@ -1104,7 +1147,7 @@ function card(html, ms = 2200){
     E.card.innerHTML = `<div class="inner">${html}</div>`; E.card.hidden = false; E.card.classList.remove('out');
     let done = false;
     const end = () => { if (done) return; done = true; E.card.classList.add('out'); setTimeout(() => { E.card.hidden = true; res(); }, FAST ? 0 : 550); };
-    E.card.onclick = end; if (ms || FAST) setTimeout(end, FAST ? 0 : ms);
+    E.card.onclick = end; if (ms || FAST || AUTO) setTimeout(end, FAST ? 0 : AUTO ? Math.min(ms || 1600, 900) : ms);
   });
 }
 
@@ -1152,7 +1195,10 @@ function note(t, ctx){ t = String(t); const e = {d:S.day, t}; if (ctx && /\{(m|g
 function setQuest(n){ S.quest = n; hud(); E.quest.classList.remove('flash'); void E.quest.offsetWidth; E.quest.classList.add('flash'); toast('主線更新・無名花影', true); }
 
 const cfmt = (t, ctx) => String(tr(t)).replace(/\{m\}/g, S.mentee && S.mentee.n ? tr(S.mentee.n) : W('學弟妹', '後輩')).replace(/\{g\}/g, ctx.c ? tr(ctx.c.n) : '').replace(/\{place\}/g, ctx.place ? tr(ctx.place) : '');
-async function run(seq, ctx = {}){
+// RUN_D>0＝正在播劇本（事件、支線、主線）；照舊時遇到未讀過嘅劇本先停，日常閒聊照讀唔停
+let RUN_D = 0;
+async function run(seq, ctx = {}){ RUN_D++; try { return await run0(seq, ctx); } finally { RUN_D--; } }
+async function run0(seq, ctx = {}){
   for (const st of seq){
     const op = st[0];
     if (typeof op === 'string' && op[0] === '#'){
@@ -1477,7 +1523,18 @@ function vineGame({title, lens = [3, 5]}){
 }
 
 // 依課程挑選小遊戲
-function playGame(kind, {title, short = false, time} = {}){
+// 照舊時唔使玩小遊戲：按你最近的平均成績計
+function autoGame(kind, n){
+  const a = S.gavg[kind] ?? 3, sc = Math.max(1, Math.min(5, Math.round(a + (Math.random() - .5))));
+  const full = sc >= 5 || (a >= 4.5 && Math.random() < .6);
+  return Promise.resolve({score: full ? 5 : sc, full, next: full ? n : Math.floor(n / 2)});
+}
+function playGame(kind, opt = {}){
+  const n = kind === 'yuan' ? (opt.short ? 4 : 5) : kind === 'fei' || kind === 'craft' ? (opt.short ? 2 : 3) : kind === 'ling' || kind === 'herb' ? 2 : (opt.short ? 4 : 5);
+  if (AUTO && !FAST) return autoGame(kind, n);
+  return playGame0(kind, opt).then(r => { if (r && r.score){ const a = S.gavg[kind]; S.gavg[kind] = a == null ? r.score : a * .7 + r.score * .3; } return r; });
+}
+function playGame0(kind, {title, short = false, time} = {}){
   const tb = hasFx('time') ? 2000 : 0;
   if (kind === 'yuan') return starGame({title, n: short ? 4 : 5, time: (time || 10000) + tb});
   if (kind === 'fei' || kind === 'craft') return fireGame({title, rounds: short ? 2 : 3});
@@ -1524,6 +1581,7 @@ async function openStall(){
 
 // 一個可以重用的浮層：用來泡茶準備、研發、買材料
 function panel(html, bind){
+  if (!panel.keep) stopAuto('打開了選單，已停止照舊');
   return new Promise(res => {
     const el = document.createElement('div'); el.className = 'tpanel';
     el.innerHTML = `<div class="tp-in">${html}</div>`;
@@ -1584,10 +1642,25 @@ async function research(){
 
 // 開攤：準備（泡哪幾種、泡幾份）→ 招待客人 → 結算
 const canBrew = () => cupCount() > 0 || S.known.some(id => maxBatches(REC[id]) > 0);
+// 按想要的份量泡，材料不夠就少泡（多款茶共用材料時逐款扣，唔會扣到負數）
+function fitPlan(want){
+  const pl = {}, inv = {...S.inv};
+  for (const [id, n] of Object.entries(want || {})) if (REC[id] && S.known.includes(id) && n > 0){
+    const need = Object.entries(REC[id].need), m = Math.min(n, ...need.map(([k, v]) => Math.floor(Math.max(0, inv[k] || 0) / v)));
+    if (m > 0){ pl[id] = m; for (const [k, v] of need) inv[k] -= v * m; }
+  }
+  return pl;
+}
 async function runStall(night){
-  const prep = await panel('', (el, done) => {
+  let autoPlan = null;
+  if (AUTO && !FAST && S.autoPlan){
+    const pl = fitPlan(S.autoPlan), cups = cupCount() + Object.values(pl).reduce((a, b) => a + b, 0) * cupsPerBatch();
+    if (cups) autoPlan = pl;
+  }
+  panel.keep = !!autoPlan;
+  const prep = autoPlan || await panel('', (el, done) => {
     const plan = {};
-    if (FAST){ for (const id of S.known){ const m = maxBatches(REC[id]); if (m) plan[id] = Math.min(m, 2); } return done(plan); }
+    if (FAST) return done(fitPlan(Object.fromEntries(S.known.map(id => [id, 2]))));
     const draw = () => {
       const used = {};
       for (const [id, n] of Object.entries(plan)) for (const [k, v] of Object.entries(REC[id].need)) used[k] = (used[k] || 0) + v * n;
@@ -1607,13 +1680,14 @@ async function runStall(night){
       el.querySelectorAll('.pm').forEach(b => b.onclick = () => { const id = b.dataset.id; plan[id] = Math.max(0, (plan[id] || 0) + +b.dataset.d); SND.sfx('tap'); draw(); });
       el.querySelectorAll('[data-up]').forEach(b => b.onclick = () => { const u = TEA.UPS.find(x => x.id === b.dataset.up); if (S.money < upCost(u)) return; S.money -= upCost(u); S.stall.ups[u.id] = true; SND.sfx('gain'); hud(); toast(`買下了「${u.n}」`); el.querySelector('details').open = true; draw(); el.querySelector('details').open = true; });
       el.querySelector('[data-x=cancel]').onclick = () => done(null);
-      el.querySelector('[data-x=go]').onclick = () => done(plan);
+      el.querySelector('[data-x=go]').onclick = () => { S.autoPlan = {...plan}; done(plan); };
     };
     draw();
   });
+  panel.keep = false;
   if (!prep) return false;
   for (const [id, n] of Object.entries(prep)){
-    if (!n) continue;
+    if (!(n > 0)) continue;
     for (const [k, v] of Object.entries(REC[id].need)) S.inv[k] -= v * n;
     S.cups[id] = (S.cups[id] || 0) + n * cupsPerBatch();
   }
@@ -1669,12 +1743,13 @@ function serve(night){
       g.querySelector('#cust').classList.remove('in'); void g.offsetWidth; g.querySelector('#cust').classList.add('in');
       drawCups(); t0 = performance.now(); tick();
       if (FAST) setTimeout(() => S.cups[order] ? give(order) : give(Object.keys(S.cups).find(k => S.cups[k])), 0);
+      else if (AUTO) setTimeout(() => { const ok = Math.random() < (S.gavg.serve ?? .85); give(ok && S.cups[order] ? order : Object.keys(S.cups).find(k => S.cups[k] && k !== order) || order); }, 420);
     };
     const tick = () => { cancelAnimationFrame(raf); const run = () => { const p = 1 - (performance.now() - t0) / patience; g.querySelector('#pat').style.width = Math.max(0, p * 100) + '%'; if (p <= 0) leave('客人等不及，走了。'); else raf = requestAnimationFrame(run); }; raf = requestAnimationFrame(run); };
     const msg = t => g.querySelector('#svmsg').textContent = t;
     const leave = t => { if (busy) return; busy = true; cancelAnimationFrame(raf); rep = Math.max(0, rep - 1); SND.sfx('wrong'); msg(t); setTimeout(next, FAST ? 0 : 900); };
     const give = id => {
-      if (busy || !cur || !id || !S.cups[id]) return;
+      if (busy || !cur || !id || !(S.cups[id] > 0)) return;
       const p = Math.max(0, 1 - (performance.now() - t0) / patience), right = id === cur.order;
       if (!right && Math.random() < .55) return leave(`「我想要的不是這個……」客人搖搖頭走了。`);
       busy = true; cancelAnimationFrame(raf);
@@ -1687,7 +1762,7 @@ function serve(night){
       else msg(right ? `「謝謝！好香。」　+${base}${tip ? ` ＋小費 ${tip}` : ''} 靈石` : `「好吧，就這杯。」　+${base} 靈石`);
       drawCups(); setTimeout(next, FAST ? 0 : 1000);
     };
-    const end = () => { cancelAnimationFrame(raf); setTimeout(() => { g.remove(); E.app.classList.remove('gaming'); resolve({total, served, money, tips, rep:Math.round(rep), fans}); }, FAST ? 0 : 500); };
+    const end = () => { cancelAnimationFrame(raf); if (!AUTO && !FAST && total){ const a = S.gavg.serve; S.gavg.serve = a == null ? served / total : a * .7 + served / total * .3; } setTimeout(() => { g.remove(); E.app.classList.remove('gaming'); resolve({total, served, money, tips, rep:Math.round(rep), fans}); }, FAST ? 0 : 500); };
     setTimeout(next, FAST ? 0 : 500);
   });
 }
@@ -2485,7 +2560,8 @@ async function explore(prompt){
       || presentAt(p.id).some(ready);
     const here = presentAt(p.id).filter(c => S.met[c.id]).map(c => c.n);
     const desc = (bl ? '蝕痕・' : '') + p.desc + (here.length ? '・' + here.join('、') : '');
-    return {label:p.n, sub: hot ? '✦ ' + desc : desc, hot, value:p.id, icon:p.icon || `img/loc_${p.id}.webp`};
+    const hotKey = hot ? [p.id, bl ? JSON.stringify(S.blight) : '', presentAt(p.id).filter(ready).map(c => c.id + (S.ev[c.id] || 0)).join(','), S.quest, S.q2, S.q4, KEYPLACE[p.id] && keyReady(KEYPLACE[p.id]) ? 'k' : ''].join('|') : '';
+    return {label:p.n, sub: hot ? '✦ ' + desc : desc, hot, hotKey, value:p.id, icon:p.icon || `img/loc_${p.id}.webp`};
   }).concat([{label:'回宿舍休息', sub:'體力 +3', value:'rest', icon:'img/loc_dorm.webp'}]));
   if (pid === 'rest'){ setScene('宿舍・晨'); await sleep(300); addHp(3); await say('', vary('rest', VARY2.SCENE.REST)); return; }
   const p = PLACES.find(x => x.id === pid); tlog('explore');
@@ -3072,8 +3148,12 @@ async function loop(){
       if (S.house && S.hp <= 2 && k !== 'rest') await tip('tired');
       if (S.house && k === 'lunch'){ setScene('膳堂'); await sleep(300); await tip('basics'); }
       if (S.breakUp) await breakScene();
+      curSlot = ''; autoPath = '';
+      if (AUTO && !AUTO_SLOTS.has(k)) stopAuto('今天有特別的安排，已停止照舊');
       const skip = await storyBeat(S.day, k);
+      curSlot = k; autoPath = '';
       if (!skip) await SLOTS[k]();
+      curSlot = '';
       tutCheck(); S.slot++; hud();
     }
     if (S.day >= LAST_DAY && !S.flags.ch1){ if (!await chapterEnd()) return; }
