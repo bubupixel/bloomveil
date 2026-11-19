@@ -17,7 +17,7 @@ body{touch-action:manipulation;overscroll-behavior:none}
   padding:9px 18px;font:15px "LXGW WenKai TC","Kaiti TC",serif;letter-spacing:.12em;color:#fbf2df;cursor:pointer;
   background:rgba(22,15,11,.92);border:1px solid #ecd7a2;border-radius:999px;box-shadow:0 6px 20px rgba(0,0,0,.45);white-space:nowrap}
 </style>
-<script>window.GAME_VERSION = '20261118-163016';</script>
+<script>window.GAME_VERSION = '20261119-185057';</script>
 <title>花朝靈院</title>
 <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png">
@@ -398,6 +398,11 @@ button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px so
 .bb{font:inherit;font-size:12px;letter-spacing:.15em;padding:4px 10px 4px 12px;border-radius:999px;border:1px solid var(--gold);background:rgba(28,20,14,.82);color:#f6ead0;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.35)}
 .bb.on{background:var(--house);color:#fff}
 .autobar{position:absolute;right:12px;top:-16px;z-index:4;font:inherit;font-size:12.5px;letter-spacing:.1em;padding:5px 12px;border-radius:999px;border:1px solid var(--gold);background:rgba(28,20,14,.88);color:#fbe7c4;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.35);white-space:nowrap}
+.wkrev{background:rgba(255,248,232,.7);border:1px solid var(--line,#d8c8a8);border-radius:10px;padding:8px 12px;margin:0 0 10px}.wkrev h4{margin:0 0 4px;font-size:14px}.wkrev p{margin:2px 0;font-size:13px}
+.wkwho{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}.wkwho label,.wkrow label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:#7a6650}
+.wklist{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}.wkrow{display:grid;grid-template-columns:5.6em 1fr 1fr;gap:8px;align-items:end;padding:6px 0;border-bottom:1px dashed rgba(120,90,60,.25)}.wkrow b{font-size:13px;line-height:1.3}.wktag{display:block;color:#b0473f;font-weight:400;font-size:11px}
+.tpanel select{font:inherit;font-size:14px;padding:6px 6px;border-radius:8px;border:1px solid #cdb995;background:#fffaf0;color:#3d2c1c;min-width:0;width:100%}
+.wkprio{display:flex;gap:8px;align-items:flex-start;font-size:13px;margin:4px 0 6px}
 .choices button.autoopt{grid-column:1/-1;border-style:dashed;min-height:44px;flex-direction:column;align-items:flex-start;justify-content:center;gap:2px}
 .choices button.autoopt .t{width:auto}.choices button.autoopt .sub{margin:0;text-align:left;max-width:none}
 .bl{display:flex;flex-direction:column;gap:10px;max-height:62vh;overflow-y:auto;padding:4px 2px}
@@ -576,7 +581,7 @@ html.lowfx .item.in{animation:itemIn 1.2s ease-out forwards}
       <span class="speaker" id="speaker" hidden></span><span class="affrow" id="affrow" hidden></span>
       <p class="line" id="line"></p>
       <span class="more" id="more" hidden></span>
-      <button type="button" id="autoBar" class="autobar" hidden>⏸ 停止照舊</button>
+      <button type="button" id="autoBar" class="autobar" hidden>⏸ 停止排程</button>
       <span class="boxbtns"><button type="button" class="bb" id="btnLog" aria-label="對白回顧">回顧</button><button type="button" class="bb" id="btnSkip" aria-label="略過已讀" aria-pressed="false">略過</button></span>
     </div>
   </div>
@@ -596,10 +601,10 @@ html.lowfx .item.in{animation:itemIn 1.2s ease-out forwards}
 // 日文版仍在製作：網址加上 &ja 才會開啟語言切換
 window.JA_ON = true;
 window.LANG = (() => { try { return JA_ON && JSON.parse(localStorage.getItem('huachao-pref') || '{}').lang === 'ja' ? 'ja' : 'zh'; } catch (e) { return 'zh'; } })();
-if (LANG === 'ja'){ document.documentElement.lang = 'ja'; document.write('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap"><script src="story_ja.js?v=20261118-163016"><\/script>'); }
+if (LANG === 'ja'){ document.documentElement.lang = 'ja'; document.write('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap"><script src="story_ja.js?v=20261119-185057"><\/script>'); }
 </script>
-<script src="audio.js?v=20261118-163016"></script>
-<script src="story.js?v=20261118-163016"></script>
+<script src="audio.js?v=20261119-185057"></script>
+<script src="story.js?v=20261119-185057"></script>
 <script>
 (() => {
 const {ARCS,ARC_LINES,VARY2,FACE_TAGS,TUT,VARY,END,BOND,YEAR,POST,QUESTS4,CH4,TIPS:GUIDE,CH3,BAIC,EV_BAI,GOODS,SORT,QUESTS2,CH2,LIFE2,LIFE,MAGIC,TEA,HOUSES,STATS,STAT_ORDER,C:C12,BAI,GRAN,FACES,EV,QUESTS,MAIN,PROLOGUE,PLACES,LOOK,FREE,CLASS_TEXT,SCENE_IMG,SCENE_FALLBACK,CG} = window.STORY;
@@ -1025,7 +1030,7 @@ function tap(){
 }
 $('btnLog').onclick = e => { e.stopPropagation(); backlog(); };
 $('btnSkip').onclick = e => { e.stopPropagation(); setSkip(!PREF.skip); };
-$('autoBar').onclick = e => { e.stopPropagation(); stopAuto('已停止照舊過日子'); };
+$('autoBar').onclick = e => { e.stopPropagation(); stopAuto('已停止排程，這星期接下來自己選'); };
 setSkip(PREF.skip, true); applyLowFx();
 E.app.addEventListener('click', e => {
   if (e.target.closest('button,input,.sheet,.game,.card,.choices')) return;
@@ -1056,6 +1061,8 @@ async function say(id, text, face){
   if (id && FACE_TAGS && (!face || face === 'happy') && FACE_TAGS[id + '|' + text]) face = FACE_TAGS[id + '|' + text];
   if (window.__SAYLOG) window.__SAYLOG.push([id || '', String(text), face || '']);
   const w = who(id);
+  // 一週排程：平日流程中讀過的句子不再播（只記入對白回顧）；劇本（事件、支線）照常播
+  if (AUTO && !FAST && RUN_D === 0 && AUTO_SLOTS.has(curSlot) && !SAY_FORCE){ const l0 = fmt(text); if (READ.has(hashLine((w ? w.n : '') + '|' + l0))){ logLine(w ? (w.me ? S.name : w.n) : '', l0); return; } }
   E.choices.innerHTML = ''; E.choices.classList.remove('hasmore'); document.querySelectorAll('.morehint').forEach(x => x.remove()); E.scrim.classList.remove('on'); E.box.classList.remove('wait');
   setSpeaker(w);
   if (w && !w.me && !w.npc && !cgOn) show(w, {face, mystery: w.id === 'bai' && !S.flags.baiName});
@@ -1063,9 +1070,9 @@ async function say(id, text, face){
   E.more.hidden = true;
   const line = fmt(text), key = hashLine((w ? w.n : '') + '|' + line), seen = READ.has(key);
   logLine(w ? (w.me ? S.name : w.n) : '', line);
-  if (AUTO && !seen && !FAST && RUN_D > 0) stopAuto('遇到新的劇情，已停止照舊');
   if (PREF.skip && !seen && !FAST){ setSkip(false, true); toast('遇到新的對白，已停止略過'); }
-  const fastOn = (PREF.skip || AUTO) && seen;
+  const routineAuto = AUTO && !FAST && RUN_D === 0 && (AUTO_SLOTS.has(curSlot) || SAY_FORCE);
+  const fastOn = (PREF.skip || routineAuto) && seen;
   typeText.instant = fastOn;
   await typeText(line);
   typeText.instant = false;
@@ -1074,28 +1081,94 @@ async function say(id, text, face){
   if (FAST) return;
   await new Promise(r => {
     tapWait = r;
-    if (fastOn) setTimeout(() => { if (tapWait === r){ tapWait = null; r(); } }, AUTO ? 260 : 90);
-    else if (AUTO) setTimeout(() => { if (tapWait === r){ tapWait = null; r(); } }, 900 + [...line].length * 45);
+    if (fastOn) setTimeout(() => { if (tapWait === r){ tapWait = null; r(); } }, routineAuto ? 260 : 90);
+    else if (routineAuto) setTimeout(() => { if (tapWait === r){ tapWait = null; r(); } }, 900 + [...line].length * 45);
     else if (PREF.auto) setTimeout(() => { if (tapWait === r){ tapWait = null; r(); } }, 1400 + [...line].length * 55);
   });
   E.more.hidden = true;
 }
-// ---------- 照舊過日子：平淡日子照上次嘅安排自動過，有新事情就停 ----------
-let AUTO = false, curSlot = '', autoPath = '';
+// ---------- 一週排程：每週一排好行程，平日自動照排程過；事件、劇情、考試、節慶照常播 ----------
+let AUTO = false, curSlot = '', autoPath = '', SAY_FORCE = false;
 const AUTO_SLOTS = new Set(['class', 'lunch', 'explore', 'outing', 'dinner', 'free', 'rest']);
-const autoOK = () => S && S.house && S.day > 28 && AUTO_SLOTS.has(curSlot);
+const planOK = () => S && S.house && S.day > 28;
 function setAuto(on, why){
   if (AUTO === on) return; AUTO = on;
   E.app.classList.toggle('autoing', on); $('autoBar').hidden = !on;
   if (why) toast(why);
 }
-function stopAuto(why){
-  if (!AUTO) return;
-  if (window.__autoLog) window.__autoLog.push([S.day, curSlot, autoPath, why, [...E.choices.querySelectorAll('button')].map(b => (b.dataset.al || '') + (b.querySelector('.hot') ? '*' : '')).join(','), E.line.textContent.slice(0, 30)]);
-  setAuto(false, why);
+function stopAuto(why){ if (AUTO) setAuto(false, why); }
+const placeLabel = id => id === 'rest' ? '回宿舍休息' : (PLACES.find(p => p.id === id) || {}).n;
+const FREE_LABEL = k => ({study:'自修咒術', night:'擺夜攤', sleep:'早點休息', qin:'撫琴'})[k] || (FREE.find(x => x.k === k) || {}).n;
+const PLAN_EXIT = ['不送了', '改天再說', '離開市集', '離開', '沿著湖邊走走', '和同院同學一起吃', '再想想'];
+// 排程替你揀：先處理事件和任務（如果有勾選），再照排程；唔肯定就留俾你揀
+function planPick(opts){
+  const W = S.week; if (!W) return null;
+  const en = opts.filter(o => !o.disabled), by = l => l && en.find(o => o.label === l), d = S.day, path = autoPath;
+  const hot = W.prio !== false && en.find(o => o.hot && o.label !== '委託板');
+  const focus = [W.lunch, W.dinner].filter(id => id && BY[id]).map(id => BY[id].n);
+  const chars = en.filter(o => C.some(c => c.n === o.label)).sort((a, b) => (S.aff[b.value] || 0) - (S.aff[a.value] || 0));
+  if (curSlot === 'lunch' && !path) return hot || by(W.lunch && BY[W.lunch] && BY[W.lunch].n) || chars[0] || en[0];
+  if ((curSlot === 'explore' || curSlot === 'outing') && !path) return hot || by(placeLabel(W.aft[d])) || by('回宿舍休息');
+  if (curSlot === 'dinner' && !path) return by(W.dinner && BY[W.dinner] && BY[W.dinner].n) || by('和同院同學一起吃');
+  if (curSlot === 'free' && !path) return by(FREE_LABEL(W.eve[d])) || by('早點休息');
+  const gift = en.find(o => (o.sub || '').includes('正是為對方準備的')); if (gift) return gift;
+  const prom = en.find(o => /^約.+明天一起吃午膳$/.test(o.label)); if (prom) return W.lunch && BY[W.lunch] && prom.label.includes(BY[W.lunch].n) ? prom : by('改天再說') || prom;
+  if (path.length > 140) return null;   // 防止喺同一個選單兜圈
+  if (by('離開委託板')) return by('離開委託板');
+  if (by('離開市集')) return !path.includes('開花茶攤') && W.aft[d] === 'market' && by('開花茶攤') || by('離開市集');
+  if (curSlot === 'explore' || curSlot === 'outing'){
+    if (hot) return hot;
+    for (const n of focus){ const o = by(n); if (o) return o; }
+    if (by('四處看看')) return by('四處看看');
+  }
+  const mem = S.autoMem[curSlot + '>' + path]; if (by(mem)) return by(mem);
+  for (const l of PLAN_EXIT) if (by(l)) return by(l);
+  return null;
+}
+const WEEK_JA = ['月','火','水','木','金','土','日'];
+async function weekPlanner(){
+  const d0 = S.day, last = d0 + (6 - weekday(d0)), days = []; for (let d = d0; d <= last; d++) days.push(d);
+  const T = S.weekTpl || {aft:{}, eve:{}}, prev = S.week, met = C.filter(c => S.met[c.id]);
+  const places = PLACES.filter(p => !p.post || S.flags.yulanOpen).map(p => [p.id, p.id === 'market' ? '百靈市集・擺攤' : p.n]).concat([['rest', '回宿舍休息']]);
+  const sk = S.house && [S.house, 'herb', 'craft'].find(k => curSpell(k));
+  const frees = [...(sk ? [['study', '自修咒術']] : []), ...(S.stall.open ? [['night', '擺夜攤']] : []), ...FREE.map(x => [x.k, x.n]), ...(S.decor.qin ? [['qin', '撫琴']] : []), ['sleep', '早點休息']];
+  const hs = HOUSES[S.house].stat, defA = w => T.aft[w] || (w % 2 ? 'market' : (PLACES.find(p => p.stat === hs) || {}).id || 'lib'), defE = w => T.eve[w] || (w % 3 === 2 ? 'sleep' : sk ? 'study' : 'ling');
+  const sel = (name, list, v) => `<select data-k="${name}">${list.map(([k, n]) => `<option value="${k}"${k === v ? ' selected' : ''}>${n}</option>`).join('')}</select>`;
+  const who = (name, v, extra) => sel(name, [['', extra], ...met.filter(c => c.id !== 'bai' || name === 'dinner').map(c => [c.id, c.n])], v);
+  const rows = days.map(d => {
+    const P = plan(d), wd = weekday(d), tag = P.includes('festival') ? W('節慶', '祭り') : P.includes('yearend') ? W('年終祭', '年越し祭') : P.includes('exam') ? W('月考', '月例試験') : '';
+    const a = P.includes('explore') || P.includes('outing') ? sel('a' + d, places, defA(wd)) : `<span class="muted">${tag || '—'}</span>`;
+    const e = P.includes('free') ? sel('e' + d, frees, defE(wd)) : '<span class="muted">—</span>';
+    return `<div class="wkrow"><b>${W('週' + WEEK[wd], WEEK_JA[wd] + '曜')}<br>${W(cn(domOf(d)) + '日', domOf(d) + '日')}${tag ? `<small class="wktag">${tag}</small>` : ''}</b><label>${P.includes('outing') ? W('上午', '午前') : W('下午', '午後')}${a}</label><label>${W('晚上', '夜')}${e}</label></div>`;
+  }).join('');
+  let review = '';
+  if (prev && prev.snap && prev.from < d0){
+    const sn = prev.snap, st = Object.keys(STATS).map(k => [k, (S.stats[k] || 0) - (sn.stats[k] || 0)]).filter(x => x[1] > 0).map(([k, v]) => `${STATS[k][0]} +${v}`);
+    const af = Object.keys(S.aff).map(k => [k, (S.aff[k] || 0) - (sn.aff[k] || 0)]).filter(x => x[1] > 0 && BY[x[0]]).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k, v]) => `${BY[k].n} +${v}`);
+    const mo = S.money - sn.money, sp = S.spells.length - sn.spells;
+    review = `<div class="wkrev"><h4>${W('上週回顧', '先週のふりかえり')}</h4><p>${st.length ? st.join('、') : W('能力沒有變化', '能力は変わらず')}</p><p>${W('靈石', '霊石')} ${mo >= 0 ? '+' : ''}${mo}${sp > 0 ? W(`・習得咒語 ${sp} 個`, `・呪文を ${sp} つ習得`) : ''}</p>${af.length ? `<p>${W('好感', '好感度')}：${af.join('、')}</p>` : ''}</div>`;
+  }
+  const ok = await panel('', (el, done) => {
+    el.querySelector('.tp-in').innerHTML = `<header><img class="hicon" src="img/ui_scroll.webp" alt=""><h3>${W('這星期的行程', '今週の予定')}</h3><span class="coinline">${days.length < 7 ? W('由今天到週日', '今日から日曜まで') : ''}</span></header>
+      ${review}
+      <div class="wkwho"><label>${W('午膳想陪', '昼食の相手')}${who('lunch', (prev && prev.lunch) || '', W('不指定', '指定なし'))}</label><label>${W('晚膳想約', '夕食に誘う')}${who('dinner', (prev && prev.dinner) || '', W('同院同學', '同じ院の仲間'))}</label></div>
+      <div class="wklist">${rows}</div>
+      <label class="wkprio"><input type="checkbox" data-k="prio"${!prev || prev.prio !== false ? ' checked' : ''}> ${W('有人有話想說、或者有任務的時候，先去處理', '話したそうな人や任務があるときは、そちらを優先する')}</label>
+      <p class="muted">${W('排好之後，平日會自動照行程過，只顯示每天的結果；事件、劇情、考試和節慶會照常停下來給你玩。對話框右上角可以隨時停止。', '予定を決めると、ふだんの日は自動で進み、毎日の結果だけを表示します。イベントや物語、試験、祭りはいつもどおり止まって遊べます。会話欄の右上からいつでも止められます。')}</p>
+      <div class="tp-acts"><button type="button" class="act" data-x="no">${W('這星期自己來', '今週は自分で選ぶ')}</button><button type="button" class="act main" data-x="go">${W('照這樣過', 'この予定で進む')}</button></div>`;
+    el.querySelector('[data-x=no]').onclick = () => done(false);
+    el.querySelector('[data-x=go]').onclick = () => {
+      const v = k => { const x = el.querySelector(`[data-k="${k}"]`); return x ? (x.type === 'checkbox' ? x.checked : x.value) : null; };
+      const Wk = {from:d0, to:last, lunch:v('lunch'), dinner:v('dinner'), prio:v('prio'), aft:{}, eve:{}, snap:{stats:{...S.stats}, aff:{...S.aff}, money:S.money, spells:S.spells.length}};
+      S.weekTpl = S.weekTpl || {aft:{}, eve:{}};
+      for (const d of days){ const a = v('a' + d), e = v('e' + d); if (a){ Wk.aft[d] = a; S.weekTpl.aft[weekday(d)] = a; } if (e){ Wk.eve[d] = e; S.weekTpl.eve[weekday(d)] = e; } }
+      S.week = Wk; done(true);
+    };
+  });
+  return ok;
 }
 // 測試用：照舊過日子的內部狀態
-window.__autoDbg = {readAllRoutine(){ const h = READ.has.bind(READ); READ.has = k => RUN_D === 0 || h(k); }};
+window.__autoDbg = {get slot(){ return curSlot; }, get path(){ return autoPath; }, get auto(){ return AUTO; }, pick: o => planPick(o), readAllRoutine(){ const h = READ.has.bind(READ); READ.has = k => RUN_D === 0 || h(k); }};
 function choose(prompt, opts){
   if (prompt){ setSpeaker(null); E.line.textContent = fmt(prompt); logLine('', fmt(prompt)); }
   E.more.hidden = true; E.box.classList.add('wait'); tapWait = null;
@@ -1116,20 +1189,19 @@ function choose(prompt, opts){
       E.choices.appendChild(b);
     });
     const akey = curSlot + '>' + autoPath, want = S.autoMem && S.autoMem[akey];
-    // 「✦」新機會：同一個提示只會令照舊停一次（之後照舊會略過佢，除非佢就係平時揀嘅嗰個）
-    const en = opts.filter(o => !o.disabled), hotKey = o => o.hotKey || o.label + '|' + (o.sub || '') + '|' + ((C.find(c => c.n === o.label) || {}).id ? S.ev[C.find(c => c.n === o.label).id] || 0 : ''), newHot = en.filter(o => o.hot && !(S.autoHot || {})[hotKey(o)]);
-    const hot = newHot.length > 0, hit = want && en.find(o => o.label === want);
-    if (AUTO && hot){ S.autoHot = S.autoHot || {}; for (const o of newHot) S.autoHot[hotKey(o)] = 1; }
-    if (AUTO && !FAST){
-      if (!autoOK()) stopAuto('遇到特別的安排，已停止照舊');
-      else if (hot) stopAuto('有新的事情可以做，已停止照舊');
-      else if (!hit) stopAuto('今天的選擇和平時不一樣，已停止照舊');
-      else setTimeout(() => { const b = [...E.choices.querySelectorAll('button')].find(x => x.dataset.al === want && !x.disabled); if (b && AUTO) b.click(); }, 380);
+    if (AUTO && !FAST && RUN_D === 0 && AUTO_SLOTS.has(curSlot)){
+      const o = planPick(opts);
+      if (o) setTimeout(() => { const b = [...E.choices.querySelectorAll('button')].find(x => x.dataset.al === o.label && !x.disabled); if (b && AUTO) b.click(); }, 320);
     }
-    if (!AUTO && !FAST && autoOK() && !autoPath && hit && !hot){
+    if (!AUTO && !FAST && planOK() && AUTO_SLOTS.has(curSlot) && !autoPath && RUN_D === 0){
       const b = document.createElement('button'); b.type = 'button'; b.className = 'autoopt';
-      b.innerHTML = '<span class="t">⏩ 照舊過日子</span><span class="sub">照平時的安排自動過，有新的事情就會停下</span>';
-      b.onclick = () => { setAuto(true, '照舊過日子：開始'); const t = [...E.choices.querySelectorAll('button')].find(x => x.dataset.al === want && !x.disabled); if (t) t.click(); };
+      b.innerHTML = '<span class="t">📅 排這星期的行程</span><span class="sub">排好之後平日自動過，事件和劇情照常播</span>';
+      b.onclick = async () => {
+        if (!(await weekPlanner())) return;
+        setAuto(true, '照行程過日子');
+        const o = planPick(opts), t = o && [...E.choices.querySelectorAll('button')].find(x => x.dataset.al === o.label && !x.disabled);
+        if (t) t.click();
+      };
       E.choices.prepend(b);
     }
     moreHint();
@@ -1147,7 +1219,7 @@ function card(html, ms = 2200){
     E.card.innerHTML = `<div class="inner">${html}</div>`; E.card.hidden = false; E.card.classList.remove('out');
     let done = false;
     const end = () => { if (done) return; done = true; E.card.classList.add('out'); setTimeout(() => { E.card.hidden = true; res(); }, FAST ? 0 : 550); };
-    E.card.onclick = end; if (ms || FAST || AUTO) setTimeout(end, FAST ? 0 : AUTO ? Math.min(ms || 1600, 900) : ms);
+    E.card.onclick = end; if (ms || FAST || (AUTO && RUN_D === 0)) setTimeout(end, FAST ? 0 : AUTO && RUN_D === 0 ? Math.min(ms || 1600, 1100) : ms);
   });
 }
 
@@ -1531,7 +1603,7 @@ function autoGame(kind, n){
 }
 function playGame(kind, opt = {}){
   const n = kind === 'yuan' ? (opt.short ? 4 : 5) : kind === 'fei' || kind === 'craft' ? (opt.short ? 2 : 3) : kind === 'ling' || kind === 'herb' ? 2 : (opt.short ? 4 : 5);
-  if (AUTO && !FAST) return autoGame(kind, n);
+  if (AUTO && !FAST && RUN_D === 0 && AUTO_SLOTS.has(curSlot)) return autoGame(kind, n);
   return playGame0(kind, opt).then(r => { if (r && r.score){ const a = S.gavg[kind]; S.gavg[kind] = a == null ? r.score : a * .7 + r.score * .3; } return r; });
 }
 function playGame0(kind, {title, short = false, time} = {}){
@@ -1581,7 +1653,6 @@ async function openStall(){
 
 // 一個可以重用的浮層：用來泡茶準備、研發、買材料
 function panel(html, bind){
-  if (!panel.keep) stopAuto('打開了選單，已停止照舊');
   return new Promise(res => {
     const el = document.createElement('div'); el.className = 'tpanel';
     el.innerHTML = `<div class="tp-in">${html}</div>`;
@@ -1653,7 +1724,7 @@ function fitPlan(want){
 }
 async function runStall(night){
   let autoPlan = null;
-  if (AUTO && !FAST && S.autoPlan){
+  if (AUTO && !FAST && RUN_D === 0 && AUTO_SLOTS.has(curSlot) && S.autoPlan){
     const pl = fitPlan(S.autoPlan), cups = cupCount() + Object.values(pl).reduce((a, b) => a + b, 0) * cupsPerBatch();
     if (cups) autoPlan = pl;
   }
@@ -1743,7 +1814,7 @@ function serve(night){
       g.querySelector('#cust').classList.remove('in'); void g.offsetWidth; g.querySelector('#cust').classList.add('in');
       drawCups(); t0 = performance.now(); tick();
       if (FAST) setTimeout(() => S.cups[order] ? give(order) : give(Object.keys(S.cups).find(k => S.cups[k])), 0);
-      else if (AUTO) setTimeout(() => { const ok = Math.random() < (S.gavg.serve ?? .85); give(ok && S.cups[order] ? order : Object.keys(S.cups).find(k => S.cups[k] && k !== order) || order); }, 420);
+      else if (AUTO && AUTO_SLOTS.has(curSlot)) setTimeout(() => { const ok = Math.random() < (S.gavg.serve ?? .85); give(ok && S.cups[order] ? order : Object.keys(S.cups).find(k => S.cups[k] && k !== order) || order); }, 420);
     };
     const tick = () => { cancelAnimationFrame(raf); const run = () => { const p = 1 - (performance.now() - t0) / patience; g.querySelector('#pat').style.width = Math.max(0, p * 100) + '%'; if (p <= 0) leave('客人等不及，走了。'); else raf = requestAnimationFrame(run); }; raf = requestAnimationFrame(run); };
     const msg = t => g.querySelector('#svmsg').textContent = t;
@@ -2702,7 +2773,9 @@ async function rest(){
   const before = S.hp, sunday = weekday(S.day) === 6;
   const after = sunday ? hpMax() + (S.hpBonus || 0) + fxN('rest') : Math.min(hpMax() + (S.hpBonus || 0), S.hp + 4 + (S.decor.incense ? 1 : 0) + (S.hpBonus || 0) + fxN('rest'));
   const dname = monthOf(S.day) === 1 ? `第${cn(S.day)}日` : `${cn(mInYear(S.day))}月${cn(domOf(S.day))}日`;
+  SAY_FORCE = true;
   await say('', `${parts.length ? `${dname}結束。${parts.join('、')}。` : `${dname}結束。平靜的一天。`}${sunday ? '週末好好睡了一覺，' : '睡了一晚，'}體力 ${before} → ${after}。`);
+  SAY_FORCE = false;
   S.today = []; S.hp = after; S.hpBonus = 0;
   if (S.promise && S.promise.day <= S.day) S.promise = null;
   await checkSpells();
@@ -3149,7 +3222,9 @@ async function loop(){
       if (S.house && k === 'lunch'){ setScene('膳堂'); await sleep(300); await tip('basics'); }
       if (S.breakUp) await breakScene();
       curSlot = ''; autoPath = '';
-      if (AUTO && !AUTO_SLOTS.has(k)) stopAuto('今天有特別的安排，已停止照舊');
+      if (S.slot === 0 && !FAST && planOK() && (weekday(S.day) === 0 || (S.week && S.day > S.week.to))){
+        setAuto(false); if (await weekPlanner()) setAuto(true, '照行程過日子');
+      }
       const skip = await storyBeat(S.day, k);
       curSlot = k; autoPath = '';
       if (!skip) await SLOTS[k]();
