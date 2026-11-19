@@ -17,7 +17,7 @@ body{touch-action:manipulation;overscroll-behavior:none}
   padding:9px 18px;font:15px "LXGW WenKai TC","Kaiti TC",serif;letter-spacing:.12em;color:#fbf2df;cursor:pointer;
   background:rgba(22,15,11,.92);border:1px solid #ecd7a2;border-radius:999px;box-shadow:0 6px 20px rgba(0,0,0,.45);white-space:nowrap}
 </style>
-<script>window.GAME_VERSION = '20261119-185057';</script>
+<script>window.GAME_VERSION = '20261119-194958';</script>
 <title>花朝靈院</title>
 <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png">
@@ -402,6 +402,7 @@ button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px so
 .wkwho{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}.wkwho label,.wkrow label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:#7a6650}
 .wklist{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}.wkrow{display:grid;grid-template-columns:5.6em 1fr 1fr;gap:8px;align-items:end;padding:6px 0;border-bottom:1px dashed rgba(120,90,60,.25)}.wkrow b{font-size:13px;line-height:1.3}.wktag{display:block;color:#b0473f;font-weight:400;font-size:11px}
 .tpanel select{font:inherit;font-size:14px;padding:6px 6px;border-radius:8px;border:1px solid #cdb995;background:#fffaf0;color:#3d2c1c;min-width:0;width:100%}
+.wkgoal{font-size:13px;margin:0 0 8px;display:flex;align-items:center;gap:6px}.wkgoal .qi{width:20px;height:20px}
 .wkprio{display:flex;gap:8px;align-items:flex-start;font-size:13px;margin:4px 0 6px}
 .choices button.autoopt{grid-column:1/-1;border-style:dashed;min-height:44px;flex-direction:column;align-items:flex-start;justify-content:center;gap:2px}
 .choices button.autoopt .t{width:auto}.choices button.autoopt .sub{margin:0;text-align:left;max-width:none}
@@ -601,10 +602,10 @@ html.lowfx .item.in{animation:itemIn 1.2s ease-out forwards}
 // 日文版仍在製作：網址加上 &ja 才會開啟語言切換
 window.JA_ON = true;
 window.LANG = (() => { try { return JA_ON && JSON.parse(localStorage.getItem('huachao-pref') || '{}').lang === 'ja' ? 'ja' : 'zh'; } catch (e) { return 'zh'; } })();
-if (LANG === 'ja'){ document.documentElement.lang = 'ja'; document.write('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap"><script src="story_ja.js?v=20261119-185057"><\/script>'); }
+if (LANG === 'ja'){ document.documentElement.lang = 'ja'; document.write('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap"><script src="story_ja.js?v=20261119-194958"><\/script>'); }
 </script>
-<script src="audio.js?v=20261119-185057"></script>
-<script src="story.js?v=20261119-185057"></script>
+<script src="audio.js?v=20261119-194958"></script>
+<script src="story.js?v=20261119-194958"></script>
 <script>
 (() => {
 const {ARCS,ARC_LINES,VARY2,FACE_TAGS,TUT,VARY,END,BOND,YEAR,POST,QUESTS4,CH4,TIPS:GUIDE,CH3,BAIC,EV_BAI,GOODS,SORT,QUESTS2,CH2,LIFE2,LIFE,MAGIC,TEA,HOUSES,STATS,STAT_ORDER,C:C12,BAI,GRAN,FACES,EV,QUESTS,MAIN,PROLOGUE,PLACES,LOOK,FREE,CLASS_TEXT,SCENE_IMG,SCENE_FALLBACK,CG} = window.STORY;
@@ -1114,8 +1115,14 @@ function planPick(opts){
   const gift = en.find(o => (o.sub || '').includes('正是為對方準備的')); if (gift) return gift;
   const prom = en.find(o => /^約.+明天一起吃午膳$/.test(o.label)); if (prom) return W.lunch && BY[W.lunch] && prom.label.includes(BY[W.lunch].n) ? prom : by('改天再說') || prom;
   if (path.length > 140) return null;   // 防止喺同一個選單兜圈
-  if (by('離開委託板')) return by('離開委託板');
-  if (by('離開市集')) return !path.includes('開花茶攤') && W.aft[d] === 'market' && by('開花茶攤') || by('離開市集');
+  // 委託：有可以交付的就順手交付（勾選了「先處理」時）
+  if (by('離開委託板')){ const h = W.prio !== false && en.find(o => o.hot && !path.includes('|' + o.label + '|')); return h || by('離開委託板'); }
+  const give = en.find(o => o.label.startsWith('交付一杯')); if (give) return give;
+  if (by('離開市集')){
+    const bd = by('委託板');
+    if (W.prio !== false && bd && bd.hot && !path.includes('委託板')) return bd;
+    return !path.includes('開花茶攤') && W.aft[d] === 'market' && by('開花茶攤') || by('離開市集');
+  }
   if (curSlot === 'explore' || curSlot === 'outing'){
     if (hot) return hot;
     for (const n of focus){ const o = by(n); if (o) return o; }
@@ -1150,9 +1157,10 @@ async function weekPlanner(){
   }
   const ok = await panel('', (el, done) => {
     el.querySelector('.tp-in').innerHTML = `<header><img class="hicon" src="img/ui_scroll.webp" alt=""><h3>${W('這星期的行程', '今週の予定')}</h3><span class="coinline">${days.length < 7 ? W('由今天到週日', '今日から日曜まで') : ''}</span></header>
-      ${review}
+      ${review}${goalLine() ? `<p class="wkgoal">${goalLine()}</p>` : ''}${projLine() ? `<p class="wkgoal">${projLine()}</p>` : ''}
       <div class="wkwho"><label>${W('午膳想陪', '昼食の相手')}${who('lunch', (prev && prev.lunch) || '', W('不指定', '指定なし'))}</label><label>${W('晚膳想約', '夕食に誘う')}${who('dinner', (prev && prev.dinner) || '', W('同院同學', '同じ院の仲間'))}</label></div>
       <div class="wklist">${rows}</div>
+      ${S.stall.open && !canBrew() ? `<p class="wkgoal">${W('提醒：身上沒有茶材，排了擺攤也開不成。記得先去市集買材料。', '注意：手もとにお茶の材料がないので、屋台を予定しても開けません。先に市場で材料を買っておきましょう。')}</p>` : ''}
       <label class="wkprio"><input type="checkbox" data-k="prio"${!prev || prev.prio !== false ? ' checked' : ''}> ${W('有人有話想說、或者有任務的時候，先去處理', '話したそうな人や任務があるときは、そちらを優先する')}</label>
       <p class="muted">${W('排好之後，平日會自動照行程過，只顯示每天的結果；事件、劇情、考試和節慶會照常停下來給你玩。對話框右上角可以隨時停止。', '予定を決めると、ふだんの日は自動で進み、毎日の結果だけを表示します。イベントや物語、試験、祭りはいつもどおり止まって遊べます。会話欄の右上からいつでも止められます。')}</p>
       <div class="tp-acts"><button type="button" class="act" data-x="no">${W('這星期自己來', '今週は自分で選ぶ')}</button><button type="button" class="act main" data-x="go">${W('照這樣過', 'この予定で進む')}</button></div>`;
@@ -1337,9 +1345,114 @@ function hud(){
   else E.quest.hidden = true;
 }
 
+// ---------- 三年級畢業作品：三年級開始揀一個，靠平日活動累積，畢業典禮展示 ----------
+const PROJ_GOAL = 240, PROJ_MS = [60, 120, 180];
+const PROJ = {
+  tea:{n:W('《一盞茶》茶館企劃', '茶館企画『一杯の茶』'), img:'img/tea_osm.webp', pts:{stall:10, research:6},
+    d:W('把三年擺攤的經驗寫成一份茶館企劃，畢業時請講師試喝。', '三年間の屋台の経験を茶館の企画書にまとめ、卒業の日に講師たちに試飲してもらう。'), how:W('擺攤、研發配方', '屋台、新しいレシピ'),
+    ms:[W('你把每一次擺攤的帳目抄進新的簿子裡。哪一款茶在雨天賣得最好，原來一目了然。', '屋台の帳簿を一冊の新しいノートに書き写した。雨の日にどのお茶がよく売れるか、ひと目でわかる。'),
+        W('花婆婆看了你的企劃，用指甲在其中一頁點了點：「這裡，茶要再淡一點。」', '花婆さまは企画書を眺め、あるページを爪の先で叩いた。「ここ。お茶はもう少し薄くね」'),
+        W('你畫好了茶館的平面圖：窗邊兩張桌、櫃台一壺永遠溫著的茶。最後一格，你寫上了外婆的名字。', '茶館の見取り図を描き上げた。窓辺に卓が二つ、カウンターにはいつも温かいお茶がひとつ。最後の欄に、おばあちゃんの名前を書き入れた。')],
+    done:W('《一盞茶》寫完了。合上簿子的時候，滿紙都是茶香。', '『一杯の茶』を書き上げた。帳面を閉じると、紙いっぱいにお茶の香りがした。'),
+    show:W('畢業展上，講師們排隊喝你泡的茶。院長喝完第二杯，問你茶館什麼時候開張。', '卒業展では、講師たちがあなたのお茶を飲もうと列を作った。二杯目を飲み終えた院長が、茶館はいつ開くのかと尋ねた。'),
+    part:W('你的茶館企劃還差最後幾頁。畢業展上，你仍然泡了一壺茶，請路過的人坐下來喝。', '茶館の企画書は最後の数ページが白いまま。それでも卒業展ではお茶を淹れて、通りがかる人に座ってもらった。')},
+  thesis:{n:W('術法研究論文', '術法の研究論文'), img:'img/ui_scroll.webp', pts:{study:6, 'free:bo':6, class:2},
+    d:W('選一道咒語，從頭研究到底，寫成一篇論文。', '呪文をひとつ選び、とことん研究して論文にまとめる。'), how:W('自修咒術、研讀典籍、上課', '呪術の自習、典籍を読む、授業'),
+    ms:[W('藏書閣的管理員替你找出一疊二十年前的筆記。字跡很舊，咒語的推導卻比課本還清楚。', '書庫の管理人が、二十年前のノートの束を探してくれた。字は古びているのに、呪文の導き方は教科書よりずっと明快だ。'),
+        W('你在論文裡推翻了自己第一章的結論。講師看完，只在旁邊寫了兩個字：「很好。」', '論文の中で、自分が第一章で出した結論をひっくり返した。講師は読み終えると、余白に一言だけ書いた。「よろしい」'),
+        W('你在月光下把咒語唸了一百遍。最後一遍，指尖的光多亮了一分——跟論文裡算的一樣。', '月明かりの下で呪文を百回唱えた。最後の一回、指先の光がわずかに強くなった――論文で計算したとおりに。')],
+    done:W('論文寫完了。你在封面寫下題目，又在角落補了一句：獻給所有替我點過燈的人。', '論文を書き上げた。表紙に題を書き、隅に一行添えた。わたしのために灯りをともしてくれた、すべての人へ。'),
+    show:W('畢業展上，你的論文被收進藏書閣。管理員說，二十年後，也許會有學弟妹從這裡找到你。', '卒業展で、あなたの論文は書庫に収められた。二十年後、どこかの後輩がここであなたを見つけるかもしれない、と管理人は言った。'),
+    part:W('論文還差最後的推導。畢業展上，你把未完成的手稿攤開，講師說：「學問本來就沒有寫完的一天。」', '論文は最後の導出がまだだった。卒業展で未完成の原稿を広げると、講師は言った。「学問に、書き終わる日などないものだ」')},
+  atlas:{n:W('花靈圖譜', '花霊の図譜'), img:'img/loc_vine.webp', pts:{look:6, 'free:gan':4},
+    d:W('走遍靈院的每個角落，把見過的花靈一一畫下、記下。', '霊院の隅々を歩き、出会った花霊をひとつずつ描いて記録する。'), how:W('四處看看、湖邊散步、靜坐冥想', '見て回る、湖畔の散歩、座って瞑想'),
+    ms:[W('你在紫藤迴廊的柱子後面，發現一隻只在黃昏出現的花靈。你把牠畫成第一頁。', '紫藤回廊の柱の陰で、黄昏にだけ現れる花霊を見つけた。それを図譜の一ページ目に描いた。'),
+        W('花月湖的錦鯉旁邊，原來住著一群水裡的花靈。你蹲在岸邊畫了一整個下午。', '花月湖の錦鯉のそばに、水の中の花霊たちが住んでいた。岸にしゃがんで、午後いっぱい描き続けた。'),
+        W('圖譜快滿了。你在最後一頁留了空白——那是你還沒遇見的花靈。', '図譜はもうすぐいっぱいになる。最後のページは空けておいた――まだ出会っていない花霊のために。')],
+    done:W('《花靈圖譜》完成了。翻開來，每一頁都有花香，和你走過的路。', '『花霊図譜』が完成した。めくれば、どのページにも花の香りと、歩いてきた道がある。'),
+    show:W('畢業展上，學弟妹圍著你的圖譜不肯走。有人指著一頁說：「這隻我也見過！」', '卒業展では、後輩たちがあなたの図譜を囲んで離れなかった。あるページを指さして「この子、見たことある！」と言う子もいた。'),
+    part:W('圖譜還有好多空白。畢業展上，你把它攤開，說：「剩下的，就交給你們去找了。」', '図譜にはまだ空白がたくさんある。卒業展でそれを広げて、あなたは言った。「残りは、みんなで見つけてね」')},
+  stage:{n:W('畢業演術', '卒業の演術'), img:'img/loc_arena.webp', pts:{'free:ling':6, qin:4, 'free:feng':4, 'look:arena':6},
+    d:W('編一段屬於自己的術法表演，在畢業典禮前夕演出。', '自分だけの術法の演目を作り、卒業式の前夜に披露する。'), how:W('練習術法、撫琴、臨帖練字、試煉場', '術の練習、琴、字の手習い、試練場'),
+    ms:[W('你在宿舍院子裡排練第一個動作。轉身的時候，袖子帶起的花瓣落了一地。', '寮の中庭で、最初の動きを稽古した。振り向いた拍子に、袖が巻き上げた花びらが一面に散った。'),
+        W('試煉場的燈只為你留到很晚。你把三個術法串成一段，一次比一次順。', '試練場の灯りが、あなたのためだけに遅くまでともっていた。三つの術をひと続きにつなげ、回を重ねるごとに滑らかになっていく。'),
+        W('最後一段，你決定不用術法，只是靜靜地站著，讓花瓣自己落下來。', '最後の場面は、術を使わないことにした。ただ静かに立って、花びらがひとりでに降るのを待つ。')],
+    done:W('演術編好了。你在空無一人的試煉場，從頭到尾演了一次。只有月亮在看。', '演目が仕上がった。誰もいない試練場で、最初から最後まで通して演じた。見ていたのは月だけだった。'),
+    show:W('畢業典禮前夕，你在試煉場演出。最後一片花瓣落下時，全場安靜了好久，才響起掌聲。', '卒業式の前夜、試練場で演じた。最後の花びらが落ちると、会場は長いあいだ静まり返り、やがて拍手が起きた。'),
+    part:W('演術還沒排完。畢業典禮前夕，你只演了開頭的一段，台下仍然有人為你鼓掌。', '演目はまだ仕上がっていなかった。卒業式の前夜、冒頭の一場面だけを演じた。それでも客席から拍手が届いた。')}
+};
+function projAdd(tag){
+  const P = S.proj; if (!P || P.p >= PROJ_GOAL) return;
+  const T = PROJ[P.id].pts, v = T[tag] || T[tag.split(':')[0]] || 0; if (!v) return;
+  P.p = Math.min(PROJ_GOAL, P.p + v);
+}
+async function projCheck(){
+  const P = S.proj; if (!P) return;
+  const D = PROJ[P.id], lv = PROJ_MS.filter(x => P.p >= x).length + (P.p >= PROJ_GOAL ? 1 : 0);
+  while ((P.lv || 0) < lv){
+    P.lv = (P.lv || 0) + 1;
+    if (P.lv <= 3){ await say('', D.ms[P.lv - 1]); toast(W(`畢業作品：${D.n}（${P.p}/${PROJ_GOAL}）`, `卒業制作：${D.n}（${P.p}/${PROJ_GOAL}）`)); }
+    else { SND.sfx('magic'); note('畢業作品完成了。'); await card(`<img class="crestimg" src="${D.img}" alt=""><span class="small">${W('畢業作品完成', '卒業制作が完成')}</span><span class="big">${D.n}</span>`, 2400); await say('', D.done); }
+  }
+}
+async function projPick(){
+  await say('', W('三年級了。講師說，每個人都要在畢業前完成一份「畢業作品」。', '三年生になった。講師いわく、卒業までに全員「卒業制作」をひとつ仕上げること。'));
+  const id = await choose(W('你想做什麼？', '何をつくる？'), Object.entries(PROJ).map(([k, D]) => ({label:D.n, sub:`${D.d}${W('（靠：', '（')}${D.how}${W('）', 'で進む）')}`, value:k, icon:D.img})));
+  S.proj = {id, p:0, lv:0}; note('選定了畢業作品。');
+}
+const projLine = () => S.proj && S.proj.p < PROJ_GOAL ? `<img class="qi" src="${PROJ[S.proj.id].img}" alt="">${W('畢業作品', '卒業制作')}：${PROJ[S.proj.id].n} ${S.proj.p}/${PROJ_GOAL}` : '';
+
+// ---------- 每月目標：每月一號揀一個，月內達成就有獎勵 ----------
+const goalRew = () => 100 + 80 * yearOf(S.day);
+const goalCur = g => g.t === 'stat' ? S.stats[g.k] || 0 : g.t === 'aff' ? S.aff[g.k] || 0 : g.t === 'earn' ? S.stall.earned || 0 : g.t === 'comm' ? S.commDone || 0
+  : g.t === 'prac' ? S.pracSum || 0 : g.t === 'gift' ? S.giftSum || 0 : g.t === 'exam' ? (g.hit ? 1 : 0) : 0;
+const goalProg = g => Math.max(0, Math.min(g.n, goalCur(g) - (g.t === 'exam' ? 0 : g.base)));
+function goalText(g){
+  const nm = g.k && BY[g.k] ? BY[g.k].n : '';
+  return g.t === 'stat' ? W(`${STATS[g.k][0]}提升 ${g.n}`, `${tr(STATS[g.k][0])}を ${g.n} 上げる`)
+    : g.t === 'aff' ? W(`和${nm}的好感提升 ${g.n}`, `${tr(nm)}との好感度を ${g.n} 上げる`)
+    : g.t === 'earn' ? W(`擺攤賺到 ${g.n} 靈石`, `屋台で ${g.n} 霊石を稼ぐ`)
+    : g.t === 'comm' ? W(`完成 ${g.n} 張茶攤委託`, `屋台の依頼を ${g.n} 件こなす`)
+    : g.t === 'prac' ? W(`術譜熟練累積 ${g.n}`, `術譜の熟練度を ${g.n} ためる`)
+    : g.t === 'gift' ? W(`送出 ${g.n} 份對方最喜歡的禮物`, `相手がいちばん喜ぶ贈り物を ${g.n} 回渡す`)
+    : W('本月月考拿到乙等或以上', '今月の月例試験で乙以上を取る');
+}
+function goalPool(){
+  const out = [], y = yearOf(S.day);
+  for (const k of Object.keys(STATS)){ const n = Math.round(30 * Math.pow(1 - (S.stats[k] || 0) / 100, 2)); if (n >= 4) out.push({t:'stat', k, n}); }
+  for (const c of C.filter(c => S.met[c.id] && (S.aff[c.id] || 0) < 185 && S.rel[c.id] !== 'ex')) out.push({t:'aff', k:c.id, n:(S.aff[c.id] || 0) < 100 ? 12 : 7});
+  if (S.stall.open){ out.push({t:'earn', n:150 * y}); out.push({t:'comm', n:1}); }
+  const sk = S.house && [S.house, 'herb', 'craft'].find(k => { const x = curSpell(k); return x && (S.mag[x.id] || 0) + 40 <= x.need; });
+  if (sk) out.push({t:'prac', n:40});
+  if (C.some(c => S.met[c.id])) out.push({t:'gift', n:1});
+  if (domOf(S.day) < EXAM_DOM && mInYear(S.day) !== MONTHS) out.push({t:'exam', n:1});
+  const types = [...new Set(out.map(g => g.t))].sort(() => Math.random() - .5).slice(0, 3);
+  return types.map(t => pick(out.filter(g => g.t === t)));
+}
+async function monthGoal(){
+  if (S.goal && !S.goal.done){ await say('', W('上個月的目標沒有達成。沒關係，這個月再來。', '先月の目標は届かなかった。大丈夫、今月またがんばろう。')); note('上個月的目標沒有達成。'); }
+  S.goal = null;
+  const pool = goalPool(); if (!pool.length) return;
+  const v = await choose(W(`新的一個月。這個月想挑戰什麼？（達成可得 ${goalRew()} 靈石）`, `新しい月が始まった。今月は何に挑戦する？（達成で ${goalRew()} 霊石）`),
+    [...pool.map((g, i) => ({label:goalText(g), sub:W('本月目標', '今月の目標'), value:i, icon:'img/ui_badge.webp'})), {label:W('這個月不設目標', '今月は目標を立てない'), value:-1}]);
+  if (v < 0 || v == null) return;
+  const g = pool[v]; g.m = monthOf(S.day); g.base = goalCur(g); S.goal = g;
+  toast(W('本月目標：', '今月の目標：') + goalText(g));
+}
+async function goalCheck(){
+  const g = S.goal; if (!g || g.done || g.m !== monthOf(S.day)) return;
+  if (goalProg(g) < g.n) return;
+  g.done = true; S.goalsDone = (S.goalsDone || 0) + 1; const rw = goalRew(); S.money += rw; hud(); SND.sfx('gain');
+  note('完成了本月目標。');
+  await card(`<img class="crestimg" src="img/ui_badge.webp" alt=""><span class="small">${W('本月目標達成', '今月の目標を達成')}</span><span class="big">${goalText(g)}</span><span class="small">${W(`靈石 +${rw}・累計達成 ${S.goalsDone} 次`, `霊石 +${rw}・これで ${S.goalsDone} 回目の達成`)}</span>`, 2200);
+}
+const goalLine = () => S.goal && !S.goal.done && S.goal.m === monthOf(S.day) ? `<img class="qi" src="img/ui_badge.webp" alt="">${W('本月目標', '今月の目標')}：${goalText(S.goal)}（${goalProg(S.goal)}/${S.goal.n}）` : '';
+
 // 第一章之後，任務列輪流提示長期目標
 function lifeGoal(){
   const g = [], dm = domOf(S.day);
+  if (goalLine() && (S.day + S.slot) % 3 === 0) return goalLine();
+  if (projLine() && (S.day + S.slot) % 3 === 1) return projLine();
   if (S.flags.ch2 && !S.flags.ch3) g.push(`<img class="qi" src="img/key_fei.webp" alt="">四院花鑰在沉睡・二年級的第一個新月會醒來`);
   if (S.flags.ch3done && !S.q4 && !S.flags.ch4done) g.push(`<img class="qi" src="img/crest_yu.webp" alt="">鏡中之門打開了・白溯光在花月湖等你`);
   const lastM = mInYear(S.day) === MONTHS;
@@ -1850,7 +1963,7 @@ async function giftMenu(c){
   const VO = BOND.VOICE[c.id];
   if (g.startsWith('gift:')){
     const gf = GIFT[g.slice(5)]; S.items[gf.id]--;
-    if (gf.for === c.id && (isBday(c) || !(S.giftDay[c.id] && S.day - S.giftDay[c.id] < 4))){ S.giftDay[c.id] = S.day; S.col.gift[gf.id] = 1; aff(c.id, (isBday(c) ? 22 : 12) + (hasFx('kin') ? 3 : 0)); await say(c.id, gf.line, 'happy'); note(`送給${c.n}「${gf.n}」。`); }
+    if (gf.for === c.id && (isBday(c) || !(S.giftDay[c.id] && S.day - S.giftDay[c.id] < 4))){ S.giftDay[c.id] = S.day; S.giftSum = (S.giftSum || 0) + 1; S.col.gift[gf.id] = 1; aff(c.id, (isBday(c) ? 22 : 12) + (hasFx('kin') ? 3 : 0)); await say(c.id, gf.line, 'happy'); note(`送給${c.n}「${gf.n}」。`); }
     else if (gf.for === c.id){ aff(c.id, 3, true); await say(c.id, VO ? VO.gift2 : '又送我？……謝謝。不過，不用每次都這麼破費。', 'shy'); }
     else if (isBday(c)){ aff(c.id, 8); await say(c.id, VO ? VO.giftBd : '生日禮物？……謝謝你記得。', 'happy'); }
     else { aff(c.id, 3, true); await say(c.id, VO ? VO.giftNo : '……送我的？謝謝你。'); }
@@ -1894,7 +2007,7 @@ async function practise(key, pts){
     await tip('spell');
     await say('npc:講師', '咒語不是背出來的。練得夠熟、底子也夠厚，它自然會回應你。');
   }
-  const m = S.mag[x.id] = Math.min(x.need, (S.mag[x.id] || 0) + pts * PACE);
+  const m0 = S.mag[x.id] || 0, m = S.mag[x.id] = Math.min(x.need, m0 + pts * PACE); S.pracSum = (S.pracSum || 0) + (m - m0);
   if (m < x.need) return toast(`「${x.n}」熟練 ${m} / ${x.need}`);
   if (sealed(x)) return toast(`「${x.n}」已練熟。術譜這一頁還封著，${sealLabel(x)}才會解封`);
   if (!spellReady(x)) return toast(`「${x.n}」已練熟，${STATS[spellStat(x)][0]}還差 ${x.req - S.stats[spellStat(x)]} 才能施展`);
@@ -2387,6 +2500,8 @@ async function graduation(){
   if (S.mentee) await say(END.MENTEE[0].replace('{m}', S.mentee.n), END.MENTEE[1]);
   setScene('花月湖');
   for (const x of END.GRAN) Array.isArray(x) ? await say(x[0], x[1]) : await say('', x);
+  if (S.proj){ const D = PROJ[S.proj.id]; await say('', S.proj.p >= PROJ_GOAL ? D.show : D.part); }
+  if (S.goalsDone) await say('', W(`三年來，你給自己定下的每月目標，一共完成了 ${S.goalsDone} 個。`, `この三年間、自分で立てた毎月の目標を、${S.goalsDone} 回やり遂げた。`));
   if (S.wish.roof) await say('', '外婆說，老屋的屋頂再也沒有漏過雨。你寄回去的每一封信，她都收在不會被雨打濕的櫃子裡。');
   if (S.wish.garden) await say('', '離開前，你繞到鈴蘭藥圃看了一眼。你捐的那方花圃，開了今年的第一批花。');
   // 關係結局
@@ -2603,6 +2718,7 @@ async function cls(){
   const gl = `${STATS[stat][0]} ${got ? '+' + got : '有所累積'}`;
   await say('', r.full ? `完成！${gl}。` : `差一點就完成了。${gl}。`);
   await practise(w === 1 ? 'herb' : w === 3 ? 'craft' : S.house, r.score + (r.full ? 2 : 0));
+  projAdd('class');
 }
 async function exam(){
   setScene('課室'); await sleep(300);
@@ -2619,6 +2735,7 @@ async function exam(){
   S.money += prize; gain(HOUSES[S.house].stat, r.score + 1); hud();
   await say('npc:監考講師', `${S.name}，${grade}等。`);
   await say('', `你領到 ${prize} 枚靈石的獎學金。${grade === '甲' ? '同院的人都向你投來佩服的目光。' : grade === '丁' ? '下個月，一定要更努力。' : ''}`);
+  if (S.goal && S.goal.t === 'exam' && (grade === '甲' || grade === '乙')) S.goal.hit = 1;
   S.grades.push(grade); note(`${fin ? cn(yearOf(S.day)) + '年級期末大考' : m === 1 ? '第一次月考' : `第${cn(m)}次月考`}：${grade}等。`);
 }
 async function explore(prompt){
@@ -2657,7 +2774,7 @@ async function explore(prompt){
     if (lk !== 'walk'){ useHp(2); gain('feng', 1); await meet(BY[lk], 'alt', '花月湖'); if (lk === 'bai') await giftMenu(BY.bai); return; }
   }
   if (p.id === 'lake'){
-    gain('feng', 2); useHp(1); gather('lake');
+    gain('feng', 2); useHp(1); gather('lake'); projAdd('look:lake');
     if (S.quest === 1 && S.day >= 7){ await run(MAIN.lake); return; }
     if (S.wx === 'wind') gain('feng', 1);
     if (Math.random() < (S.wx === 'fog' ? .6 : .35) && await incident('lake')) return;
@@ -2677,7 +2794,7 @@ async function explore(prompt){
   if (!id){ await say('', vary('walk', VARY.WALK)); return; }
   useHp(2);
   if (typeof id === 'string' && id.startsWith('pair:')){ await pairScene(id.slice(5), p); return; }
-  if (id === 'look'){ gather(p.id); if (hasFx('hue') && POST.HUE[p.id] && Math.random() < .3 && await hueMoment(p.id)) return; if (Math.random() < (S.wx === 'fog' && p.id === 'vine' ? .6 : .35) && await incident(p.id)) return; gain(p.stat, 2); await say('', pick(LIFE.LOOK[p.id] || [LOOK[p.id]])); return; }
+  if (id === 'look'){ gather(p.id); projAdd('look:' + p.id); if (hasFx('hue') && POST.HUE[p.id] && Math.random() < .3 && await hueMoment(p.id)) return; if (Math.random() < (S.wx === 'fog' && p.id === 'vine' ? .6 : .35) && await incident(p.id)) return; gain(p.stat, 2); await say('', pick(LIFE.LOOK[p.id] || [LOOK[p.id]])); return; }
   gain(p.stat, 1);
   await meet(BY[id], HAUNT[id] && HAUNT[id][0] === p.id ? 'meet' : 'alt', p.n);
 }
@@ -2700,7 +2817,7 @@ async function market(justOpened){
     if (v === 'board'){ await board(); continue; }
     if (v === 'buy'){ await say('npc:花婆婆', pick(['今天的貨都新鮮，慢慢挑。','桂花是今早才摘的，香著呢。','小娃娃，又來啦？','要什麼自己拿，婆婆給你算便宜點。'])); await buyIngredients(); continue; }
     if (v === 'cake'){ S.money -= 20; S.cake++; hud(); await say('', vary('cake', VARY2.SCENE.CAKE_BUY)); continue; }
-    if (v === 'stall'){ setScene('花茶攤'); await sleep(300); if (await runStall(false)){ useHp(4); return; } setScene('百靈市集'); continue; }
+    if (v === 'stall'){ setScene('花茶攤'); await sleep(300); if (await runStall(false)){ useHp(4); projAdd('stall'); return; } setScene('百靈市集'); continue; }
     gain('qiao', 1); await say('', vary('mwalk', VARY2.SCENE.MARKET_WALK)); return;
   }
 }
@@ -2755,12 +2872,13 @@ async function free(){
     opts.push({label:'早點休息', sub:`今晚多恢復 ${3 + (S.decor.pillow ? 1 : 0)} 點體力`, value:'sleep', icon:S.decor.pillow ? 'img/dec_pillow.webp' : 'img/ui_hp.webp'});
     const f = await choose(vp('free'), opts); tlog('free');
     if (f === 'sleep'){ S.hpBonus = 3 + (S.decor.pillow ? 1 : 0); await say('', vary('sleep', VARY.SLEEP)); return; }
-    if (f === 'qin'){ addHp(1); gain('feng', 1); await say('', pick(['你在窗邊撫琴。琴聲很輕，像怕吵醒窗外的花。','你彈了一首外婆常哼的小調。彈著彈著，心就靜下來了。','你隨手撥了幾個音，竟然連成了一段好聽的旋律。'])); return; }
+    if (f === 'qin'){ addHp(1); gain('feng', 1); projAdd('qin'); await say('', pick(['你在窗邊撫琴。琴聲很輕，像怕吵醒窗外的花。','你彈了一首外婆常哼的小調。彈著彈著，心就靜下來了。','你隨手撥了幾個音，竟然連成了一段好聽的旋律。'])); return; }
     if (f === 'study'){ useHp(2); await say('', pick(['你在燈下翻開術譜，一遍又一遍地練習手勢。','你對著窗外的月光，輕聲默念咒文。','宿舍裡很安靜。你閉上眼，把靈力在掌心繞了一圈又一圈。']));
+      projAdd('study');
       const r = await playGame(sk === 'herb' ? 'herb' : sk === 'craft' ? 'craft' : S.house, {title:'自修・' + sx.n, short:true, time:8000}); gain(spellStat(sx), 1); await practise(sk, r.score + (r.full ? 1 : 0) + (S.decor.shelf ? 1 : 0)); return; }
-    if (f === 'research'){ useHp(2); if (await research()) return; addHp(2); continue; }
-    if (f === 'night'){ setScene('夜市・花茶攤'); await sleep(300); if (await runStall(true)){ useHp(3); return; } setScene('宿舍・夜'); continue; }
-    useHp(2); gain(f.k, S.decor.desk ? 3 : 2); if (f.money){ S.money += f.money; hud(); }
+    if (f === 'research'){ useHp(2); if (await research()){ projAdd('research'); return; } addHp(2); continue; }
+    if (f === 'night'){ setScene('夜市・花茶攤'); await sleep(300); if (await runStall(true)){ useHp(3); projAdd('stall'); return; } setScene('宿舍・夜'); continue; }
+    useHp(2); gain(f.k, S.decor.desk ? 3 : 2); projAdd('free:' + f.k); if (f.money){ S.money += f.money; hud(); }
     await say('', LIFE.FREE[f.k] ? vary('fr' + f.k, [...LIFE.FREE[f.k], ...(VARY2.FREE[f.k] || [])]) : f.t); return;
   }
 }
@@ -3222,6 +3340,8 @@ async function loop(){
       if (S.house && k === 'lunch'){ setScene('膳堂'); await sleep(300); await tip('basics'); }
       if (S.breakUp) await breakScene();
       curSlot = ''; autoPath = '';
+      if (S.slot === 0 && planOK() && yearOf(S.day) === 3 && !S.proj && k !== 'newyear') await projPick();
+      if (S.slot === 0 && planOK() && domOf(S.day) === 1 && !(S.goal && S.goal.m === monthOf(S.day))) await monthGoal();
       if (S.slot === 0 && !FAST && planOK() && (weekday(S.day) === 0 || (S.week && S.day > S.week.to))){
         setAuto(false); if (await weekPlanner()) setAuto(true, '照行程過日子');
       }
@@ -3229,6 +3349,7 @@ async function loop(){
       curSlot = k; autoPath = '';
       if (!skip) await SLOTS[k]();
       curSlot = '';
+      await goalCheck(); await projCheck();
       tutCheck(); S.slot++; hud();
     }
     if (S.day >= LAST_DAY && !S.flags.ch1){ if (!await chapterEnd()) return; }
